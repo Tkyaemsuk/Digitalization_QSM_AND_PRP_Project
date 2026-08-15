@@ -36,9 +36,7 @@
 
 จาก README ของแต่ละ Table ให้ใช้รูปแบบที่อยู่ไฟล์ดังนี้:
 
-`../../../Query/<ชื่อไฟล์>.sql`
-
-ตัวอย่าง: [Sampling_Table.sql](<../Query/Sampling_Table.sql>)
+`Query/<ชื่อไฟล์>.sql`
 
 ---
 
