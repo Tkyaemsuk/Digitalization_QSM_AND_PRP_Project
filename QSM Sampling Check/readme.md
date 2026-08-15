@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://cdn.simpleicons.org/budibase" alt="Budibase" width="70">
   &nbsp;&nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/microsoftsqlserver" alt="Microsoft SQL Server" width="70">
+  <img src="https://cdn-icons-png.flaticon.com/512/5815/5815478.png" alt="Microsoft SQL Server" width="70">
   &nbsp;&nbsp;&nbsp;
   <img src="https://cdn.simpleicons.org/javascript" alt="JavaScript" width="70">
 </p>
@@ -186,7 +186,7 @@
 | เทคโนโลยี                                                                                  | หน้าที่                                           |
 | ------------------------------------------------------------------------------------------ | ------------------------------------------------- |
 | <img src="https://cdn.simpleicons.org/budibase" width="20"> Budibase                       | พัฒนา User Interface และ Workflow ของระบบ         |
-| <img src="https://cdn.simpleicons.org/microsoftsqlserver" width="20"> Microsoft SQL Server | จัดเก็บและประมวลผลข้อมูล                          |
+| <img src="https://cdn-icons-png.flaticon.com/512/5815/5815478.png" width="20"> Microsoft SQL Server | จัดเก็บและประมวลผลข้อมูล                          |
 | <img src="https://cdn.simpleicons.org/javascript" width="20"> JavaScript                   | ประมวลผลข้อมูลและควบคุมการทำงานของหน้าแอปพลิเคชัน |
 
 ---
