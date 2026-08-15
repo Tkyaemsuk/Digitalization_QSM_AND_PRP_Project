@@ -1,9 +1,11 @@
 # Digitalization QSM & PRP Project
 
+<p align="right">
+  🌐 English version: <a href="README.en.md">README.en.md</a>
+</p>
+
 <p align="center">
-  <img src="assets/header.svg"
-       alt="Digitalization QSM and PRP Project Header"
-       width="100%">
+  <img src="assets/header.svg" alt="Digitalization QSM and PRP Project Header" width="100%">
 </p>
 
 <p align="center">
@@ -111,7 +113,9 @@ Digitalization_QSM_AND_PRP_Project/
 ├── QSM Microbiological Analysis System/
 ├── QSM RAW MILK ANALYSIS/
 ├── QSM Microbiological/
-└── README.md
+├── assets/
+├── README.md
+└── README.en.md
 ```
 
 ---
