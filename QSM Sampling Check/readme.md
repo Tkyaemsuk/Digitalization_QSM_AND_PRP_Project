@@ -192,4 +192,4 @@
 ---
 
 > 📌 **QSM Sampling Check** ช่วยสนับสนุนกระบวนการสร้าง Sampling การตรวจสอบ Brik และการติดตามข้อมูลการผลิตให้เป็นระบบ ลดความผิดพลาดจากการบันทึกข้อมูล และเพิ่มประสิทธิภาพในการทำงานของฝ่าย Production
-> <img src="https://img1.pic.in.th/images/_QSM_Sampling.png" alt="QSM Sampling Check" width="500px;" height="500px;">
+> <img src="https://img1.pic.in.th/images/_QSM_Sampling.png" alt="QSM Sampling Check" width="1280x;" height="640px;">
