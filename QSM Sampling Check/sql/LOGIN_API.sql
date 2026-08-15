@@ -1,1 +1,0 @@
-SELECT * FROM [tb_app1_login] WHERE [user] = {{userac}} AND [password] = {{psw}}

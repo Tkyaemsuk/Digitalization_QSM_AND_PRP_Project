@@ -1,1 +1,0 @@
-SELECT COALESCE(MAX(TRY_CAST(no AS INT)), 0) + 1 as Brik_No FROM temperature_30high WHERE sampID = '{{ sampID }}'

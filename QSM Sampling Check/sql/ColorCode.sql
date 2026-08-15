@@ -1,1 +1,0 @@
-UPDATE temperature_30 SET ColourCode = {{code}} WHERE sampID = {{SampID}}
