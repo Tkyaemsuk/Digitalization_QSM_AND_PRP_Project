@@ -1,195 +1,108 @@
-# 🧪 QSM Sampling Check
+# 🧪 QSM Database Design
 
-<p align="center">
-  <img src="https://cdn.simpleicons.org/budibase" alt="Budibase" width="70">
-  &nbsp;&nbsp;&nbsp;
-  <img src="https://cdn-icons-png.flaticon.com/512/5815/5815478.png" alt="Microsoft SQL Server" width="70">
-  &nbsp;&nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/javascript" alt="JavaScript" width="70">
-</p>
+เอกสาร Database Design ของระบบ **QSM Microbiology Analysis System** แยกอธิบายแบบ **1 Table : 1 README** เพื่อให้ค้นหาและดูแลได้ง่ายบน GitHub
 
-<p align="center">
-  <strong>ระบบบริหารจัดการและตรวจสอบข้อมูล Sampling สำหรับฝ่าย Production</strong>
-</p>
+## 🗂️ Table Directory
 
----
-
-## 🔗 การเชื่อมโยงแอปพลิเคชันและหน่วยงาน
-
-| แผนก                  | แอปพลิเคชัน        |
-| ------------------------- | ------------------ |
-| Filling: UHT1, UHT2, UHT3 | QSM Sampling Check |
+| กลุ่ม | Table | Documentation |
+|---|---|---|
+| 🔐 Authentication | TB_APP1_LOGIN | [เปิด README](tables/tb-app1-login/README.md) |
+| 🥛 Low Acid | Sampling | [เปิด README](tables/sampling/README.md) |
+| 🌡️ Low Acid | temperature_30 | [เปิด README](tables/temperature-30/README.md) |
+| 🌡️ Low Acid | temperature_55 | [เปิด README](tables/temperature-55/README.md) |
+| 🔥 High Acid | [Sampling high] | [เปิด README](tables/sampling-high/README.md) |
+| 🔥 High Acid | temperature_30high | [เปิด README](tables/temperature-30high/README.md) |
+| 🍓 High Acid | HighAcid_Sampling_Flavour | [เปิด README](tables/highacid-sampling-flavour/README.md) |
+| 🧪 Quality Control | Qualilty_Control | [เปิด README](tables/qualilty-control/README.md) |
+| 🏭 Master Data | Machine | [เปิด README](tables/machine/README.md) |
+| 📦 Master Data | Machine_Size | [เปิด README](tables/machine-size/README.md) |
+| 👥 Master Data | empolyee | [เปิด README](tables/empolyee/README.md) |
 
 ---
 
-## 🗄️ ฐานข้อมูลของระบบ
+## 🧾 Query Directory
 
-### 🥛 Low Acid
+ไฟล์ SQL ทั้งหมดอยู่ในโฟลเดอร์ [Query](Query/README.md) โดย README นี้อธิบายหน้าที่ของแต่ละ Query และเชื่อมไปยังไฟล์ SQL จริง
 
-| ตาราง            | รายละเอียด                                                |
-| ---------------- | --------------------------------------------------------- |
-| `Sampling`       | จัดเก็บข้อมูลการสร้าง Sampling                            |
-| `Machine`        | จัดเก็บข้อมูลเครื่องจักรที่ใช้ในการผลิต                   |
-| `Machine_size`   | จัดเก็บข้อมูลขนาดผลิตภัณฑ์ของแต่ละเครื่องจักรและแต่ละแผนก |
-| `tb_app1_login`  | จัดเก็บข้อมูลสำหรับการเข้าสู่ระบบ                         |
-| `temperature_30` | จัดเก็บข้อมูลการตรวจสอบ Brik ที่อุณหภูมิ 30°C             |
-| `temperature_55` | จัดเก็บข้อมูลการตรวจสอบ Brik ที่อุณหภูมิ 55°C             |
+| กลุ่ม Query | ตัวอย่างไฟล์ |
+|---|---|
+| 📝 Create | [Create Sampling.sql](<Query/Create Sampling.sql>), [Create Sampling_HighAcid.sql](<Query/Create Sampling_HighAcid.sql>) |
+| 🧱 Insert Brik | [Temp30_Insert.sql](<Query/Temp30_Insert.sql>), [Temp55_Insert.sql](<Query/Temp55_Insert.sql>), [HighAcid_InsertBrik.sql](<Query/HighAcid_InsertBrik.sql>) |
+| 📊 Select / Table | [Sampling_Table.sql](<Query/Sampling_Table.sql>), [Sampling_HighAcid_Tables.sql](<Query/Sampling_HighAcid_Tables.sql>) |
+| ✏️ Update | [Update Sampling.sql](<Query/Update Sampling.sql>), [Sup_Production_Update.sql](<Query/Sup_Production_Update.sql>) |
+| 🗑️ Delete | [DEV_LOW_DELETE.sql](<Query/DEV_LOW_DELETE.sql>), [DEV_DELETE.sql](<Query/DEV_DELETE.sql>) |
 
----
+### 🧭 Query Path Convention
 
-# ⚙️ SQL Query และกระบวนการทำงาน
+จาก README ของแต่ละ Table ให้ใช้รูปแบบที่อยู่ไฟล์ดังนี้:
 
-## 1. `CREATE Sampling`
+`../../../Query/<ชื่อไฟล์>.sql`
 
-บันทึกข้อมูลการสร้าง Sampling ลงในตาราง `Sampling`
-
----
-
-## 2. `CallBack Sampling`
-
-ดึงข้อมูลจากตารางต่อไปนี้เพื่อนำมาแสดงผล:
-
-* `Sampling`
-* `Machine`
-* `Machine_size`
-* `temperature_30`
-* `temperature_55`
-
-การทำงานหลัก:
-
-* แปลงวันที่และเวลาให้เป็นเวลาประเทศไทยก่อนนำไปใช้งานใน Repeater
-* แสดงข้อมูลขนาดผลิตภัณฑ์
-* แสดงชื่อเครื่องจักร
-* แสดงชื่อแผนก
-* แสดงจำนวนกล่องนมของแต่ละอุณหภูมิ
+ตัวอย่าง: [Sampling_Table.sql](<../Query/Sampling_Table.sql>)
 
 ---
 
-## 3. `CallProduct30`
+## 🔗 Key Relationship Overview
 
-ตรวจสอบจำนวนกล่องนมแต่ละกล่องจากตาราง `temperature_30` ว่ามีการตรวจสอบค่า `Colour` แล้วหรือไม่
+~~~~mermaid
+flowchart LR
+    EMP["👥 empolyee<br/>PK: Code"]
+    MAC["🏭 Machine<br/>PK: No"]
+    LOGIN["🔐 TB_APP1_LOGIN<br/>PK: id"]
 
----
+    S["🥛 Sampling<br/>PK: SamplingID"]
+    T30["🌡️ temperature_30<br/>FK: sampID"]
+    T55["🌡️ temperature_55<br/>FK: sampID"]
 
-## 4. `ColorCode`
+    SH["🔥 [Sampling high]<br/>PK: SamplingIDH"]
+    TH["🔥 temperature_30high<br/>FK: SampID"]
+    HF["🍓 HighAcid_Sampling_Flavour<br/>FK: SamplingID"]
 
-อัปเดตสถานะการตรวจสอบกล่องนมในตาราง `temperature_30` โดยใช้คอลัมน์ `ColourCode`
+    S -->|"SamplingID = sampID"| T30
+    S -->|"SamplingID = sampID"| T55
+    SH -->|"SamplingIDH = SampID"| TH
+    SH -->|"SamplingIDH = SamplingID"| HF
 
-| สถานะการตรวจสอบ                  | ค่า `ColourCode` |
-| -------------------------------- | ---------------: |
-| ตรวจสอบ ATP และผลเป็น PASS       |              `1` |
-| ตรวจสอบค่า Colour และ Smell แล้ว |              `2` |
+    EMP -.->|"Code = ผู้ปฏิบัติงาน"| S
+    EMP -.->|"Code = ผู้ปฏิบัติงาน"| SH
+    MAC -.->|"No = Machine"| S
+    MAC -.->|"No = machine"| SH
+    LOGIN -.->|"ตรวจสอบสิทธิ์"| S
 
-ระบบจะอัปเดตข้อมูลตาม `ID` ของ Brik ที่ตรงกับ Sampling นั้น
+    classDef low fill:#102d46,stroke:#54e7ff,color:#eaf9ff,stroke-width:2px;
+    classDef high fill:#402a18,stroke:#ffad5c,color:#fff4e7,stroke-width:2px;
+    classDef detail fill:#20234b,stroke:#9b8cff,color:#f2f0ff;
+    classDef master fill:#173b32,stroke:#7df1a8,color:#ecfff5;
+    classDef auth fill:#32224b,stroke:#c697ff,color:#fbf4ff;
 
----
-
-## 5. `LOGIN_API`
-
-ตรวจสอบข้อมูลการเข้าสู่ระบบจากตาราง `tb_app1_login`
-
-ระบบจะเปรียบเทียบ Username และ Password ที่ผู้ใช้งานกรอกเข้ามากับข้อมูลในฐานข้อมูล หากพบข้อมูลตรงกัน ระบบจะส่งผลลัพธ์กลับมาในรูปแบบ Array
-
----
-
-## 6. `Product_Insert`
-
-ดึงข้อมูลหมายเลข Brik จากตาราง `temperature_30` และ `temperature_55` เพื่อคำนวณลำดับกล่องนมภายใน Sampling ที่เลือก
-
-หลักการทำงาน:
-
-* หากมี SamplingID แต่ยังไม่มีข้อมูลกล่องนม ระบบจะส่งค่ากลับเป็น `1`
-* หากมีข้อมูลกล่องนมอยู่แล้ว ระบบจะนับต่อจากหมายเลขล่าสุด
-* ตัวอย่างเช่น หากข้อมูลล่าสุดอยู่ที่กล่องที่ `5` ระบบจะส่งค่ากลับเป็น `6`
-
----
-
-## 7. `Sampling_Table`
-
-ดึงข้อมูลจากตารางต่าง ๆ เพื่อแสดงผลใน Table โดยประกอบด้วย:
-
-* `Sampling`
-* `Machine`
-* `temperature_30`
-* `temperature_55`
-
-การทำงานหลัก:
-
-* แสดงเฉพาะข้อมูลที่จำเป็นสำหรับส่งไปยัง Data
-* แปลงหมายเลข Machine และ Department เป็นชื่อที่อ่านเข้าใจง่าย
-* ดึงข้อมูล Brik ล่าสุดจากตาราง `temperature_30` และ `temperature_55`
-* ลดความจำเป็นในการเขียน JavaScript สำหรับแปลงข้อมูลภายใน Table
+    class S low;
+    class SH high;
+    class T30,T55,TH,HF detail;
+    class EMP,MAC master;
+    class LOGIN auth;
+~~~~
 
 ---
 
-## 8. `Summary`
+## 🔑 Relationship Summary
 
-นับจำนวนข้อมูลทั้งหมดจากตาราง `temperature_30` และ `temperature_55` แล้วนำมาแสดงผลสรุป ดังนี้
+| จาก Table | ไปยัง Table | Key | ประเภท |
+|---|---|---|---|
+| Sampling | temperature_30 | SamplingID → sampID | One-to-Many |
+| Sampling | temperature_55 | SamplingID → sampID | One-to-Many |
+| [Sampling high] | temperature_30high | SamplingIDH → SampID | One-to-Many |
+| [Sampling high] | HighAcid_Sampling_Flavour | SamplingIDH → SamplingID | One-to-One/Optional |
+| empolyee | Sampling | Code → SendBY และผู้ปฏิบัติงาน | Many-to-One |
+| Machine | Sampling | No → Machine | Many-to-One |
+| TB_APP1_LOGIN | Application | user, password | Authentication |
 
-| รายการ        | ผลลัพธ์   |
-| ------------- | --------- |
-| อุณหภูมิ 30°C | `count30` |
-| อุณหภูมิ 55°C | `count55` |
+## 🧭 Data Flow
 
----
+1. 📝 สร้าง Sampling ปกติหรือ High Acid
+2. 🧱 สร้าง Brik ในตาราง temperature
+3. 👥 เชื่อมผู้ปฏิบัติงานจาก empolyee
+4. 🏭 เชื่อมเครื่องจักรจาก Machine
+5. 🌡️ บันทึกผลตรวจและสถานะ
+6. ✅ สรุปผลและอนุมัติผ่าน QSM/QA
 
-## 9. `Sup_Production_Update`
-
-อัปเดตข้อมูลในตาราง `Sampling` ได้แก่:
-
-* `FillingDate`
-* `ExpiredDate`
-* `production_update_uid`
-
-ระบบจะอัปเดตเฉพาะข้อมูลของ `SamplingID` ที่ผู้ใช้งานเลือกไว้เท่านั้น
-
----
-
-## 10. `Update Sampling`
-
-อัปเดตข้อมูลในตาราง `Sampling` ได้แก่:
-
-* `SendBy`
-* `SendBy2`
-* `SendBy3`
-* `SendBy4`
-* `Locked_Production`
-
-### ความหมายของตัวแปร
-
-| ตัวแปร                 | รายละเอียด                                                |
-| ---------------------- | --------------------------------------------------------- |
-| `SendBy` ถึง `SendBy4` | รหัสพนักงานฝ่าย Production ที่เข้ามาเพิ่มข้อมูลในแต่ละรอบ |
-| `Locked_Production`    | สถานะการล็อกการเพิ่มข้อมูลของ Sampling                    |
-
-### สถานะ `Locked_Production`
-
-| ค่า | สถานะ                                      |
-| --: | ------------------------------------------ |
-| `0` | สามารถเพิ่มข้อมูลกล่องนมแต่ละ Brik ได้     |
-| `1` | ไม่สามารถเพิ่มข้อมูลใน Sampling นั้นได้อีก |
-
-ระบบจะอัปเดตเฉพาะ `SamplingID` ที่ผู้ใช้งานเลือกไว้เท่านั้น
-
----
-
-## 11. `GetList_ID`
-
-ดึงข้อมูล `SamplingID` ที่สร้างล่าสุด โดยอ้างอิงจากลำดับ `ID`
-
-ข้อมูลที่ได้จะถูกนำไปใช้เป็นข้อมูลประกอบสำหรับการสร้าง `SamplingID` รายการถัดไป
-
----
-
-## 🧩 เทคโนโลยีที่ใช้
-
-| เทคโนโลยี                                                                                  | หน้าที่                                           |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------- |
-| <img src="https://cdn.simpleicons.org/budibase" width="20"> Budibase                       | พัฒนา User Interface และ Workflow ของระบบ         |
-| <img src="https://cdn-icons-png.flaticon.com/512/5815/5815478.png" width="20"> Microsoft SQL Server | จัดเก็บและประมวลผลข้อมูล                          |
-| <img src="https://cdn.simpleicons.org/javascript" width="20"> JavaScript                   | ประมวลผลข้อมูลและควบคุมการทำงานของหน้าแอปพลิเคชัน |
-
----
-
-> 📌 **QSM Sampling Check** ช่วยสนับสนุนกระบวนการสร้าง Sampling การตรวจสอบ Brik และการติดตามข้อมูลการผลิตให้เป็นระบบ ลดความผิดพลาดจากการบันทึกข้อมูล และเพิ่มประสิทธิภาพในการทำงานของฝ่าย Production
-> <img src="https://i.postimg.cc/Jn84CGd0/QSM-Microbiological-Analysis-System-Document.png" alt="QSM Sampling Check" width="1280x;" height="640px;">
+> 📌 ชื่อตารางและ Column ให้ยึดตาม Database จริง หากมีการเปลี่ยนชื่อควรแก้ README ของ Table และหน้าหลักพร้อมกัน
