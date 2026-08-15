@@ -1,7 +1,7 @@
 # Digitalization QSM & PRP Project
 
 <p align="right">
-  🌐 English version: <a href="README.en.md">README.en.md</a>
+  🌐 English version: <a href="README.en.md">Cick Me!</a>
 </p>
 
 <p align="center">
