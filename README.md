@@ -1,7 +1,9 @@
 # Digitalization QSM & PRP Project
 
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0F172A,45:1D4ED8,75:0891B2,100:14B8A6&height=240&section=header&text=Digitalization%20QSM%20%26%20PRP&fontSize=42&fontColor=FFFFFF&fontAlignY=35&desc=Quality%20System%20Management%20%7C%20UHT%20%7C%20PRP&descAlignY=56&descSize=18&animation=fadeIn" alt="Digitalization QSM and PRP Project Header" width="100%">
+  <img src="assets/header.svg"
+       alt="Digitalization QSM and PRP Project Header"
+       width="100%">
 </p>
 
 <p align="center">
