@@ -1,4 +1,4 @@
-# Digitalization_QSM_Project
+# Digitalization_QSM_AND_PRP_Project
 อธิบายเกี่ยวกับทำงานในแต่ละโปรเจ็คที่เกี่ยวข้องกับแผนก QSM
 
 ## 1. การเชื่อมโยงแอปพลิเคชันและหน่วยงาน
