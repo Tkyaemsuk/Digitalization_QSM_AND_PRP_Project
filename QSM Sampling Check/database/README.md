@@ -20,6 +20,28 @@
 
 ---
 
+## 🧾 Query Directory
+
+ไฟล์ SQL ทั้งหมดอยู่ในโฟลเดอร์ [Query](../Query/README.md) โดย README นี้อธิบายหน้าที่ของแต่ละ Query และเชื่อมไปยังไฟล์ SQL จริง
+
+| กลุ่ม Query | ตัวอย่างไฟล์ |
+|---|---|
+| 📝 Create | [Create Sampling.sql](<../Query/Create Sampling.sql>), [Create Sampling_HighAcid.sql](<../Query/Create Sampling_HighAcid.sql>) |
+| 🧱 Insert Brik | [Temp30_Insert.sql](<../Query/Temp30_Insert.sql>), [Temp55_Insert.sql](<../Query/Temp55_Insert.sql>), [HighAcid_InsertBrik.sql](<../Query/HighAcid_InsertBrik.sql>) |
+| 📊 Select / Table | [Sampling_Table.sql](<../Query/Sampling_Table.sql>), [Sampling_HighAcid_Tables.sql](<../Query/Sampling_HighAcid_Tables.sql>) |
+| ✏️ Update | [Update Sampling.sql](<../Query/Update Sampling.sql>), [Sup_Production_Update.sql](<../Query/Sup_Production_Update.sql>) |
+| 🗑️ Delete | [DEV_LOW_DELETE.sql](<../Query/DEV_LOW_DELETE.sql>), [DEV_DELETE.sql](<../Query/DEV_DELETE.sql>) |
+
+### 🧭 Query Path Convention
+
+จาก README ของแต่ละ Table ให้ใช้รูปแบบที่อยู่ไฟล์ดังนี้:
+
+`../../../Query/<ชื่อไฟล์>.sql`
+
+ตัวอย่าง: [Sampling_Table.sql](<../Query/Sampling_Table.sql>)
+
+---
+
 ## 🔗 Key Relationship Overview
 
 ~~~~mermaid
@@ -82,3 +104,5 @@ flowchart LR
 4. 🏭 เชื่อมเครื่องจักรจาก Machine
 5. 🌡️ บันทึกผลตรวจและสถานะ
 6. ✅ สรุปผลและอนุมัติผ่าน QSM/QA
+
+> 📌 ชื่อตารางและ Column ให้ยึดตาม Database จริง หากมีการเปลี่ยนชื่อควรแก้ README ของ Table และหน้าหลักพร้อมกัน
