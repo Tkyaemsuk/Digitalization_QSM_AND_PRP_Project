@@ -1,0 +1,1 @@
+UPDATE Sampling SET SendBy = {{SendID}}, SendBy2 = {{SendID2}}, SendBy3 = {{SendID3}}, Send4 = {{Send4}}, Locked_Production = {{Locked}} WHERE SamplingID = {{SampID}}
