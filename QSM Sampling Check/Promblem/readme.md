@@ -10,12 +10,12 @@
 
 | 📌 สัปดาห์ | 🏢 โครงการ | ⚠️ ประเด็นปัญหาหลัก | 📁 FOLDER |
 |---|---|---|---|
-| 🟦 W.1 | MSWS | Scan QR Code ได้ข้อมูลไม่ครบ และลำดับการทำงานของแอปพลิเคชันยังไม่ถูกต้อง | [เปิดโฟลเดอร์ Week_1](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_1) |
-| 🟨 W.2 | QSM | สับสนขั้นตอนการทำงาน ฐานข้อมูลซับซ้อน และข้อมูลจากผู้ส่งยังไม่ครบถ้วน | [เปิดโฟลเดอร์ Week_2](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_2) |
-| 🟩 W.3 | QSM | ข้อมูลสำหรับรับตัวอย่างไม่ครบ ปัญหาการเชื่อมโยง Sampling Product และการตรวจสอบข้อมูลแยกตามกะ | [เปิดโฟลเดอร์ Week_3](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_3) |
-| 🟪 W.4 | QSM | สับสนเกี่ยวกับลำดับขั้นตอนการทำงานระหว่างการออกแบบระบบ | [เปิดโฟลเดอร์ Week_4](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_4) |
-| 🟧 W.5 | MSWS | ฐานข้อมูลซับซ้อนจนดึงข้อมูลมาแสดงใน Report ได้ยาก และไม่พบรหัสพนักงาน | [เปิดโฟลเดอร์ Week_5](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_5) |
-| 🟥 W.6 | MSWS | ไม่พบชื่อพนักงาน เนื่องจากฐานข้อมูลรหัสพนักงานยังไม่มีข้อมูลที่อัปเดต | [เปิดโฟลเดอร์ Week_6](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_6) |
+| 🟦 W.1 | MSWS | Scan QR Code ได้ข้อมูลไม่ครบ และลำดับการทำงานของแอปพลิเคชันยังไม่ถูกต้อง | [OPEN](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_1) |
+| 🟨 W.2 | QSM | สับสนขั้นตอนการทำงาน ฐานข้อมูลซับซ้อน และข้อมูลจากผู้ส่งยังไม่ครบถ้วน | [OPEN](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_2) |
+| 🟩 W.3 | QSM | ข้อมูลสำหรับรับตัวอย่างไม่ครบ ปัญหาการเชื่อมโยง Sampling Product และการตรวจสอบข้อมูลแยกตามกะ | [OPEN](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_3) |
+| 🟪 W.4 | QSM | สับสนเกี่ยวกับลำดับขั้นตอนการทำงานระหว่างการออกแบบระบบ | [OPEN](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_4) |
+| 🟧 W.5 | MSWS | ฐานข้อมูลซับซ้อนจนดึงข้อมูลมาแสดงใน Report ได้ยาก และไม่พบรหัสพนักงาน | [OPEN](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_5) |
+| 🟥 W.6 | MSWS | ไม่พบชื่อพนักงาน เนื่องจากฐานข้อมูลรหัสพนักงานยังไม่มีข้อมูลที่อัปเดต | [OPEN](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check/Promblem/Week_6) |
 
 ---
 
