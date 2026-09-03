@@ -459,4 +459,7 @@ FOREIGN KEY (Ref_No) REFERENCES Truck(id);
 **🥛 QSM RawMilk Database Documentation**  
 Made with care for easier maintenance, onboarding, and auditing 🧪🚚📊
 
+<img width="1201" height="793" alt="image" src="https://github.com/user-attachments/assets/a80f98e7-0e7f-427b-9bb9-206d95204ed6" />
+
+
 </div>
