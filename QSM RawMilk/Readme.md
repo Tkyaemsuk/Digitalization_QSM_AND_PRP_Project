@@ -5,7 +5,7 @@
 > จัดทำจากภาพฐานข้อมูล 6 ภาพ และไฟล์ SQL จำนวน 14 ไฟล์ เมื่อวันที่ 3 กันยายน 2026
 
 ---
-<img width="1000" height="1000" alt="image" src="https://github.com/user-attachments/assets/f63aeea3-7530-43a9-970a-171872c1a1c7" />
+<img width="650" height="650" alt="image" src="https://github.com/user-attachments/assets/f63aeea3-7530-43a9-970a-171872c1a1c7" />
 
 ---
 ## 📚 สารบัญ
