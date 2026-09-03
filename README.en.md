@@ -43,7 +43,7 @@ The systems cover the full workflow: creating inspection records, recording data
 |---|---|---|
 | 🏭 Filling: UHT1, UHT2, UHT3 | QSM Sampling Check | [Open QSM Sampling Check](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Sampling%20Check) |
 | 🧫 QSM Microbiological | QSM Microbiological Analysis System | [Open QSM Microbiological Analysis System](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Microbiological%20Analysis%20System) |
-| 🥛 QSM Microbiological | QSM Raw Milk Analysis | [Open QSM Raw Milk Analysis](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20RAW%20MILK%20ANALYSIS) |
+| 🥛 QSM Microbiological | QSM Raw Milk | [Open QSM Raw Milk Analysis](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20RawMilk) |
 | 🔬 QSM Microbiological | QSM Microbiological | [Open QSM Microbiological](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Microbiological) |
 
 > ℹ️ If a folder name differs on GitHub, update the corresponding URL to match the actual folder name.
