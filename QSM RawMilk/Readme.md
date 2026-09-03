@@ -5,7 +5,9 @@
 > จัดทำจากภาพฐานข้อมูล 6 ภาพ และไฟล์ SQL จำนวน 14 ไฟล์ เมื่อวันที่ 3 กันยายน 2026
 
 ---
+<img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/a80f98e7-0e7f-427b-9bb9-206d95204ed6" />
 
+---
 ## 📚 สารบัญ
 
 - [ภาพรวมระบบ](#-ภาพรวมระบบ)
@@ -458,8 +460,5 @@ FOREIGN KEY (Ref_No) REFERENCES Truck(id);
 
 **🥛 QSM RawMilk Database Documentation**  
 Made with care for easier maintenance, onboarding, and auditing 🧪🚚📊
-
-<img width="1201" height="793" alt="image" src="https://github.com/user-attachments/assets/a80f98e7-0e7f-427b-9bb9-206d95204ed6" />
-
 
 </div>
