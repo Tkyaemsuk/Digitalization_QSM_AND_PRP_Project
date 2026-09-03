@@ -440,8 +440,6 @@ FOREIGN KEY (Ref_No) REFERENCES Truck(id);
 - 🧮 ย้าย Calculator ไปเป็น Stored Procedure พร้อม Transaction และคืนผลลัพธ์ที่คำนวณแล้ว
 - 🛡️ สร้าง Stored Procedure สำหรับออก `SamplingID` ภายใต้ Lock/Sequence เพื่อป้องกันเลขซ้ำ
 - 🧹 ตั้งมาตรฐานชื่อเป็นรูปแบบเดียว เช่น `PascalCase` หรือ `snake_case`
-- 🗃️ ตรวจ schema ของ `Sum_of_data` และ `Sum_Sampling` แล้วเพิ่มใน ER Diagram ภายหลัง
-
 ---
 
 ## 📌 หมายเหตุท้ายเอกสาร
