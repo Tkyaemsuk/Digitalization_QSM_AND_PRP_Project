@@ -1,3 +1,4 @@
+-- หน้าที่: สร้างเลข SamplingID ถัดไป
 DECLARE @FillingDate DATE = '{{FillingDate}}';
 DECLARE @Dep varchar(2) = '{{dep}}';
 DECLARE @Machine varchar(2) = '{{machine}}';
