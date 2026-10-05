@@ -1,0 +1,317 @@
+/* =========================================================
+   เหมือนตัวของคำนวณ Result ปกติเพียงแค่แยกออกมา
+   ========================================================= */
+
+
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+
+/* =========================================================
+   CHECKBOX NORMALIZATION
+   ========================================================= */
+
+DECLARE @Check1 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check1}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check2 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check2}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check3 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check3}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check4 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check4}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check5 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check5}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check6 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check6}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check7 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check7}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check8 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check8}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check9 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check9}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check10 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check10}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check11 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check11}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check12 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check12}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check13 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check13}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check14 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check14}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check15 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check15}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check16 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check16}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check17 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check17}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check18 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check18}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check19 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check19}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+DECLARE @Check20 BIT =
+    CASE WHEN LOWER(LTRIM(RTRIM(CONVERT(NVARCHAR(20), '{{Check20}}'))))
+              IN (N'1', N'true', N'yes', N'on')
+         THEN 1 ELSE 0 END;
+
+
+/* =========================================================
+   CALCULATION
+   ========================================================= */
+
+;WITH Matched AS
+(
+    SELECT TOP 1
+        TRY_CONVERT(DECIMAL(18,6), t.result) AS result,
+        TRY_CONVERT(DECIMAL(18,6), t.Power) AS Power
+    FROM template t
+    WHERE ISNULL(TRY_CONVERT(BIT,t.check1),0) = @Check1
+      AND ISNULL(TRY_CONVERT(BIT,t.check2),0) = @Check2
+      AND ISNULL(TRY_CONVERT(BIT,t.check3),0) = @Check3
+      AND ISNULL(TRY_CONVERT(BIT,t.check4),0) = @Check4
+      AND ISNULL(TRY_CONVERT(BIT,t.check5),0) = @Check5
+      AND ISNULL(TRY_CONVERT(BIT,t.check6),0) = @Check6
+      AND ISNULL(TRY_CONVERT(BIT,t.check7),0) = @Check7
+      AND ISNULL(TRY_CONVERT(BIT,t.check8),0) = @Check8
+      AND ISNULL(TRY_CONVERT(BIT,t.check9),0) = @Check9
+      AND ISNULL(TRY_CONVERT(BIT,t.check10),0) = @Check10
+      AND ISNULL(TRY_CONVERT(BIT,t.check11),0) = @Check11
+      AND ISNULL(TRY_CONVERT(BIT,t.check12),0) = @Check12
+      AND ISNULL(TRY_CONVERT(BIT,t.check13),0) = @Check13
+      AND ISNULL(TRY_CONVERT(BIT,t.check14),0) = @Check14
+      AND ISNULL(TRY_CONVERT(BIT,t.check15),0) = @Check15
+      AND ISNULL(TRY_CONVERT(BIT,t.check16),0) = @Check16
+      AND ISNULL(TRY_CONVERT(BIT,t.check17),0) = @Check17
+      AND ISNULL(TRY_CONVERT(BIT,t.check18),0) = @Check18
+      AND ISNULL(TRY_CONVERT(BIT,t.check19),0) = @Check19
+      AND ISNULL(TRY_CONVERT(BIT,t.check20),0) = @Check20
+),
+
+Sums AS
+(
+    SELECT
+        Other_raw =
+              CASE WHEN @Check1  = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_1_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check2  = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_1_2}}'),0) ELSE 0 END
+            + CASE WHEN @Check3  = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_10_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check4  = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_10_2}}'),0) ELSE 0 END
+            + CASE WHEN @Check5  = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_100_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check6  = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_100_2}}'),0) ELSE 0 END
+            + CASE WHEN @Check7  = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_1000_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check8  = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_1000_2}}'),0) ELSE 0 END
+            + CASE WHEN @Check9  = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_10000_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check10 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_10000_2}}'),0) ELSE 0 END
+            + CASE WHEN @Check11 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_100000_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check12 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_100000_2}}'),0) ELSE 0 END
+            + CASE WHEN @Check13 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_1000000_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check14 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_1000000_2}}'),0) ELSE 0 END
+            + CASE WHEN @Check15 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_10000000_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check16 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_10000000_2}}'),0) ELSE 0 END
+            + CASE WHEN @Check17 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_100000000_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check18 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_100000000_2}}'),0) ELSE 0 END
+            + CASE WHEN @Check19 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_1000000000_1}}'),0) ELSE 0 END
+            + CASE WHEN @Check20 = 1 THEN ISNULL(TRY_CONVERT(DECIMAL(18,6),'{{Other_1000000000_2}}'),0) ELSE 0 END
+),
+
+Vals AS
+(
+    SELECT
+        Other =
+            CAST(s.Other_raw AS DECIMAL(38,12))
+            /
+            NULLIF(CAST(m.result AS DECIMAL(38,12)),0),
+
+        m.Power
+    FROM Sums s
+    CROSS JOIN Matched m
+),
+
+Nums AS
+(
+    SELECT
+        v.*,
+        n_Other =
+            CASE
+                WHEN ABS(v.Other) < 1 THEN 1
+                ELSE LEN(CAST(FLOOR(ABS(v.Other)) AS BIGINT))
+            END
+    FROM Vals v
+),
+
+Steps AS
+(
+    SELECT
+        n.*,
+        step_Other =
+            CAST(
+                POWER(
+                    CAST(10 AS DECIMAL(38,10)),
+                    CASE
+                        WHEN n_Other < 3 THEN 0
+                        ELSE n_Other - 2
+                    END
+                )
+                AS DECIMAL(38,10)
+            )
+    FROM Nums n
+),
+
+Q AS
+(
+    SELECT
+        s.*,
+        CAST(
+            ABS(s.Other) / NULLIF(s.step_Other,0)
+            AS DECIMAL(38,12)
+        ) AS q_Other
+    FROM Steps s
+),
+
+Rounded AS
+(
+    SELECT
+        q.*,
+
+        r_Other =
+            CASE
+                WHEN CAST(ABS(q.q_Other) * 10 AS BIGINT) % 10 = 5
+                THEN
+                    CASE
+                        WHEN
+                            (CAST(ABS(q.q_Other) * 10 AS BIGINT) / 10) % 2 = 0
+                        THEN FLOOR(q.q_Other)
+                        ELSE FLOOR(q.q_Other) + 1
+                    END
+
+                WHEN CAST(ABS(q.q_Other) * 10 AS BIGINT) % 10 > 5
+                THEN FLOOR(q.q_Other) + 1
+
+                ELSE FLOOR(q.q_Other)
+            END
+    FROM Q q
+),
+
+FinalCalc AS
+(
+    SELECT
+        Other,
+        Power,
+        n_Other,
+        step_Other,
+        q_Other,
+        r_Other,
+
+        FinalValue =
+            CAST(
+                SIGN(Other)
+                * r_Other
+                * step_Other
+                * Power
+                AS DECIMAL(18,0)
+            )
+    FROM Rounded
+)
+
+UPDATE sr
+SET Other_Result = CONVERT(NVARCHAR(50), f.FinalValue)
+FROM Sampling_Result sr
+CROSS JOIN FinalCalc f
+WHERE LTRIM(RTRIM(CONVERT(NVARCHAR(255),sr.SampID)))
+      =
+      LTRIM(RTRIM(CONVERT(NVARCHAR(255),'{{SampID}}')))
+
+  AND LTRIM(RTRIM(CONVERT(NVARCHAR(255),sr.Batch_Lot_no)))
+      =
+      LTRIM(RTRIM(CONVERT(NVARCHAR(255),'{{Batch_Lot_No}}')))
+
+  AND TRY_CONVERT(DECIMAL(18,6),sr.No)
+      =
+      TRY_CONVERT(DECIMAL(18,6),'{{No}}');
+
+
+/* =========================================================
+   DEBUG / RESULT
+   ========================================================= */
+
+SELECT
+    CONVERT(NVARCHAR(255),'{{SampID}}') AS SampID_Input,
+    CONVERT(NVARCHAR(255),'{{Batch_Lot_No}}') AS Batch_Lot_No_Input,
+    TRY_CONVERT(DECIMAL(18,6),'{{No}}') AS No_Input,
+
+    @Check1  AS Check1,
+    @Check2  AS Check2,
+    @Check3  AS Check3,
+    @Check4  AS Check4,
+    @Check5  AS Check5,
+    @Check6  AS Check6,
+    @Check7  AS Check7,
+    @Check8  AS Check8,
+    @Check9  AS Check9,
+    @Check10 AS Check10,
+    @Check11 AS Check11,
+    @Check12 AS Check12,
+    @Check13 AS Check13,
+    @Check14 AS Check14,
+    @Check15 AS Check15,
+    @Check16 AS Check16,
+    @Check17 AS Check17,
+    @Check18 AS Check18,
+    @Check19 AS Check19,
+    @Check20 AS Check20;
