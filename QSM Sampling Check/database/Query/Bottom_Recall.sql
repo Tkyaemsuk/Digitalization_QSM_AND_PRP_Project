@@ -16,6 +16,6 @@ WITH h_table AS
 
     WHERE t.SampID = '{{ SamplingID }}'
 )
-
+	
 SELECT *
 FROM h_table;
