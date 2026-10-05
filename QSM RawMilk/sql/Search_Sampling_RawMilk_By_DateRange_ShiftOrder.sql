@@ -4,7 +4,6 @@ DECLARE @StartDate DATE =
 DECLARE @EndDate DATE =
     TRY_CAST(NULLIF('{{EndDate}}', '') AS DATE);
 
-
 SELECT
     *
 FROM [Sampling RawMilk]
