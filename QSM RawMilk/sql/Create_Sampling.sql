@@ -1,0 +1,206 @@
+INSERT INTO [Sampling RawMilk]
+(
+    SamplingID,
+    [plan],
+    [Date],
+    Supplier,
+    grade,
+    bill,
+    truck_no,
+    driver_name,
+    W_kg,
+    W_PDP,
+    T_arrived,
+    T_sampling,
+    T_QSM_P,
+    T_goback,
+    Temp_Tank_1,
+    Temp_Tank_2,
+    Temp_Tank_3,
+    R_Tank_1,
+    R_Tank_2,
+    R_Tank_3,
+    P_Tank_1,
+    P_Tank_2,
+    P_Tank_3,
+    Antibiotic_P,
+    Alcohol_P,
+    Brix,
+    SG,
+    pH,
+    TA,
+    Fat,
+    Protein,
+    TS,
+    SNF,
+    FP,
+    SPC_Tank_1,
+    SPC_Tank_2,
+    SPC_Tank_3,
+    Coliform_1,
+    Coliform_2,
+    coliform_3,
+    E_Tank_1,
+    E_Tank_2,
+    E_Tank_3,
+    SPC,
+    SCC,
+    Car_Alevent,
+    invoice_no,
+    Result,
+    Appearance,
+    Inspector,
+    Material_document,
+    remark,
+    sup,
+    sup_date,
+    Std_Price,
+    Status,
+    NCR_Reject_No,
+    Grade_SPC,
+    Grade_SCC,
+    Grade_FP,
+    Grade_Fat,
+    Grade_SNF,
+    rate_SPC,
+    rate_SCC,
+    rate_FP,
+    rate_Fat,
+    rate_SNF,
+    Net_Price,
+    Price
+)
+VALUES
+(
+    '{{SamplingC}}',
+
+    CASE
+        WHEN NULLIF('{{Plan}}','') IS NULL THEN NULL
+        ELSE DATETIMEFROMPARTS(
+            YEAR(GETDATE()),
+            MONTH(GETDATE()),
+            DAY(GETDATE()),
+            DATEPART(HOUR, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{Plan}}','T',' '),'.000Z',''))),
+            DATEPART(MINUTE, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{Plan}}','T',' '),'.000Z',''))),
+            DATEPART(SECOND, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{Plan}}','T',' '),'.000Z',''))),
+            0
+        )
+    END,
+
+    '{{Date}}',
+    '{{Supplier}}',
+    '{{grade}}',
+    '{{bill}}',
+    '{{truck_no}}',
+    '{{driver_name}}',
+    {{W_kg}},
+    {{W_PDP}},
+
+    CASE
+        WHEN NULLIF('{{T_arrived}}','') IS NULL THEN NULL
+        ELSE DATETIMEFROMPARTS(
+            YEAR(GETDATE()),
+            MONTH(GETDATE()),
+            DAY(GETDATE()),
+            DATEPART(HOUR, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_arrived}}','T',' '),'.000Z',''))),
+            DATEPART(MINUTE, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_arrived}}','T',' '),'.000Z',''))),
+            DATEPART(SECOND, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_arrived}}','T',' '),'.000Z',''))),
+            0
+        )
+    END,
+
+    CASE
+        WHEN NULLIF('{{T_sampling}}','') IS NULL THEN NULL
+        ELSE DATETIMEFROMPARTS(
+            YEAR(GETDATE()),
+            MONTH(GETDATE()),
+            DAY(GETDATE()),
+            DATEPART(HOUR, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_sampling}}','T',' '),'.000Z',''))),
+            DATEPART(MINUTE, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_sampling}}','T',' '),'.000Z',''))),
+            DATEPART(SECOND, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_sampling}}','T',' '),'.000Z',''))),
+            0
+        )
+    END,
+
+    CASE
+        WHEN NULLIF('{{T_QSM_P}}','') IS NULL THEN NULL
+        ELSE DATETIMEFROMPARTS(
+            YEAR(GETDATE()),
+            MONTH(GETDATE()),
+            DAY(GETDATE()),
+            DATEPART(HOUR, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_QSM_P}}','T',' '),'.000Z',''))),
+            DATEPART(MINUTE, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_QSM_P}}','T',' '),'.000Z',''))),
+            DATEPART(SECOND, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_QSM_P}}','T',' '),'.000Z',''))),
+            0
+        )
+    END,
+
+    CASE
+        WHEN NULLIF('{{T_goback}}','') IS NULL THEN NULL
+        ELSE DATETIMEFROMPARTS(
+            YEAR(GETDATE()),
+            MONTH(GETDATE()),
+            DAY(GETDATE()),
+            DATEPART(HOUR, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_goback}}','T',' '),'.000Z',''))),
+            DATEPART(MINUTE, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_goback}}','T',' '),'.000Z',''))),
+            DATEPART(SECOND, TRY_CONVERT(datetime2, REPLACE(REPLACE('{{T_goback}}','T',' '),'.000Z',''))),
+            0
+        )
+    END,
+
+    {{Temp_T1}},
+    {{Temp_T2}},
+    {{Temp_T3}},
+    {{R_T1}},
+    {{R_T2}},
+    {{R_T3}},
+    {{P_T11}},
+    {{P_T22}},
+    {{P_T33}},
+    '{{Antibiotic_P}}',
+    '{{Alcohol_P}}',
+    {{Brix}},
+    {{SG}},
+    {{pH}},
+    {{TA}},
+    {{Fat}},
+    {{Protein}},
+    {{TS}},
+    {{SNF}},
+    {{FP}},
+    {{SPC_T1}},
+    {{SPC_T2}},
+    {{SPC_T3}},
+    {{coliforms_1}},
+    {{coliforms_2}},
+    {{coliforms_3}},
+    {{E_T1}},
+    {{E_T2}},
+    {{E_T3}},
+    {{SPC}},
+    {{SCC}},
+    '{{Car_Alevent}}',
+    '{{invoice_no}}',
+    '{{Result}}',
+    '{{Appearance}}',
+    '{{Inspector1}}',
+    '{{Material_document}}',
+    '{{remark}}',
+    '{{sup}}',
+    '{{sup_date}}',
+    {{Std_Price}},
+    '{{Status}}',
+    '{{NCR_Reject_No}}',
+    '{{Grade_SPC}}',
+    '{{Grade_SCC}}',
+    '{{Grade_FP}}',
+    '{{Grade_Fat}}',
+    '{{Grade_SNF}}',
+    {{rate_SPC}},
+    {{rate_SCC}},
+    {{rate_FP}},
+    {{rate_Fat}},
+    {{rate_SNF}},
+    {{Net_Price}},
+    {{Price}}
+);
