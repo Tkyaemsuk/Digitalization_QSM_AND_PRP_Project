@@ -1,4 +1,4 @@
-# PRP 3: Production & Lab Data Management (`Prp 3 table`)
+# PRP 3: Prp 3 table
 
 **แอปพลิเคชัน:** PRP Dairy Mixing and Quality Control  
 **แผนก:** PRP 3 (การผลิตนมสด, นมเปรี้ยว, ชา, กาแฟ และน้ำผลไม้)
