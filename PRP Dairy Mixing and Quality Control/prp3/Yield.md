@@ -50,43 +50,21 @@
 
 ---
 
-# 🔄 ลำดับการทำงาน
+## 🔄 Production Workflow
 
-```text
-┌──────────────────────────────┐
-│ /create-tag/:user            │
-│ SUP สร้าง product_ID          │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ /inputdata/:a/:b/:user       │
-│ Thermised                    │
-│ ข้อมูลที่เช็คจาก prp2        │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ /blending/:a/:b/:user        │
-│ Blending                     │
-│ ข้อมูลที่เช็คตอนรับนมเข้า    │
-│ tank car                     │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ /buffer/:a/:b/:user          │
-│ After Past / After cooling   │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ /buffer2/:a/:b/:user         │
-│ Standardized / Standardization│
-└──────────────────────────────┘
+```mermaid
+flowchart TD
+    A["🏷️ Create Tag<br/>/create-tag/:user<br/>SUP creates product_ID"]
+    B["🔥 Thermised<br/>/inputdata/:a/:b/:user<br/>PRP2 Quality Check"]
+    C["🥛 Blending<br/>/blending/:a/:b/:user<br/>Tank Car Receiving Check"]
+    D["❄️ After Past / After Cooling<br/>/buffer/:a/:b/:user"]
+    E["⚙️ Standardized / Standardization<br/>/buffer2/:a/:b/:user"]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
 ```
-
----
 
 # 📋 รายละเอียดแต่ละหน้า
 
