@@ -1,188 +1,159 @@
-# 🥛 PRP1 Fresh Milk
+# 🥛 PRP1 นมสดและนมเปรี้ยว
 
-ระบบ **PRP1 สำหรับนมสด** ใช้กระบวนการผลิตที่มีลักษณะคล้ายกับ PRP3 โดยแต่ละกระบวนการมีตารางสำหรับจัดเก็บข้อมูลแยกกัน และใช้ `Product_ID` เป็นข้อมูลอ้างอิงในการเชื่อมโยงข้อมูล
+ระบบ **PRP1 สำหรับนมสด** ใช้กระบวนการผลิตที่เหมือนกับ PRP3 จึงใช้ตาราง `prp3 table` ร่วมกัน โดยมี `Product_ID` เป็นข้อมูลอ้างอิงหลักในการเชื่อมโยงข้อมูลทุกตาราง
 
 ---
 
-## 🔄 Production Workflow
+## 🗄️ 1. ฐานข้อมูลของระบบ
+
+| ตาราง | รูปแบบการเก็บ | รายละเอียด |
+| ----- | ------------- | ---------- |
+| `prp3 table` | คอลัมน์ (สูงสุด 8 Batch) | เก็บ `Product_ID`, Flavor, Batch เนื่องจากนมสดมีกระบวนการเหมือน PRP3 จึงใช้ตารางเดียวกัน |
+| `Yield` | คอลัมน์ (สูงสุด 8 Batch) | เก็บข้อมูลการผลิต แบ่งเป็น 4 หน้าย่อย: Thermised, Recombine, After Past, Standardized |
+| `Finish-good` | แถว (Row) | เก็บข้อมูลนมที่ผ่านการฆ่าเชื้อแล้ว สร้างแถวตามจำนวน Batch ที่ผลิตด้วย Automation `SaveBatch` |
+| `PRP_Spec` | - | ตารางเกณฑ์ที่ใช้ตรวจสอบ Source, Flavor, Size |
+
+---
+
+## 🔑 2. การสร้าง Product_ID
+
+**Sup** เป็นผู้สร้างเลข `Product_ID` โดยใช้ข้อมูลต่อไปนี้ประกอบกัน
 
 ```text
-                         Product_ID
-                              │
-          ┌───────────────────┼───────────────────┬───────────────────┐
-          ▼                   ▼                   ▼                   ▼
-      Thermised           Recombined          After Past          Standardized
-          │                   │                   │                   │
-          └───────────────────┴───────────────────┴───────────────────┘
-                                      │
-                                      ▼
-                                 Finish-good
+Product + Date + Week + Loop + Group
+                  │
+                  ▼
+             Product_ID
+                  │
+        บันทึกลง 3 ตารางพร้อมกัน
+      ┌───────────┼───────────┐
+      ▼           ▼           ▼
+ prp3 table      Yield    Finish-good
+```
+
+> `Product_ID` ไม่ได้ถูกส่งต่อจาก `prp3 table` ไปยังตารางอื่น แต่ถูกบันทึกลงทั้ง 3 ตารางพร้อมกันตั้งแต่ตอนสร้าง
+
+---
+
+## 🔄 3. Production Workflow
+
+```text
+                  Sup สร้าง Product_ID
+                          │
+          ┌───────────────┼───────────────┐
+          ▼               ▼               ▼
+     prp3 table         Yield        Finish-good
+   (Product_ID,           │          (เก็บเป็น Row)
+    Flavor, Batch)        │                ▲
+                          │                │
+     ┌──────────┬─────────┼─────────┐      │
+     ▼          ▼         ▼         ▼      │
+ Thermised  Recombine After Past Standardized
+                                           │
+                       Automation SaveBatch วนลูปสร้าง Row
+                       ตามจำนวน Batch ที่ผลิต
 ```
 
 ---
 
-## 🧪 1. PRP1 Thermised
+## 📄 4. หน้ากรอกข้อมูลใน Yield
 
-ตาราง `prp1thermised` ใช้สำหรับจัดเก็บข้อมูลในขั้นตอน **Thermised**
+`Yield` ประกอบด้วย 4 หน้าย่อย แต่ละหน้าใช้ Table สำหรับจัดเก็บข้อมูลของตัวเอง และอ้างอิงด้วย `Product_ID`
 
-รูปแบบการทำงานคล้ายกับ PRP3 โดยระบบรับ `Product_ID` จากตาราง `Prp 3 table`
+| หน้า | Table | หมายเหตุ |
+| ---- | ----- | -------- |
+| Thermised | `prp1thermised` | มีตรวจ pH และมี Model ตรวจ pH ของน้ำ **ไม่มี** Sediment และ Water Add (ต่างจาก PRP3) |
+| Recombine | `blendingprp1` | - |
+| After Past | `buffer1_prp1` | เพิ่มการตรวจค่า **SNF** (ต่างจาก PRP3) |
+| Standardized | `buffer2_prp1` | Super ตรวจสอบความถูกต้อง และระบบคำนวณ `BOM_Volume`, `Buffer_Volume` อัตโนมัติ |
 
-```text
-Prp 3 table
-     │
-     │ Product_ID
-     ▼
-prp1thermised
-     │
-     ▼
-Thermised Data
-```
+ทุกหน้าแสดงข้อมูลรวมได้สูงสุด **8 Batch** ในหน้าเดียว
 
-### การกรอกข้อมูล
+> **หมายเหตุ:** ชื่อ Table ข้างต้นใช้จัดเก็บข้อมูลของแต่ละหน้า ไม่ได้หมายถึงลำดับการส่งข้อมูลระหว่าง Table
 
-* หน้ากรอกข้อมูลแสดงข้อมูลรวมได้สูงสุด **8 Batch**
-* มีการตรวจสอบค่า **pH**
+### 🧪 4.1 Thermised
+
+* ตรวจสอบค่า **pH**
 * มี Model สำหรับตรวจสอบค่า **pH ของน้ำ**
-* แตกต่างจาก PRP3 โดย **ไม่มีการตรวจสอบค่า Sediment และ Water Add**
+* ไม่มีการตรวจสอบ **Sediment** และ **Water Add**
 
----
+### 🥛 4.2 Recombine
 
-## 🥛 2. Blending PRP1 — Recombined
+* กรอกและตรวจสอบข้อมูลได้สูงสุด 8 Batch พร้อมกันในหน้าเดียว
 
-ตาราง `blendingprp1` ใช้สำหรับจัดเก็บข้อมูลในขั้นตอน **Recombined**
+### 🧪 4.3 After Past
 
-```text
-Product_ID
-     │
-     ▼
-blendingprp1
-     │
-     ▼
-Recombined Data
-```
+* เพิ่มการตรวจสอบค่า **SNF**
 
-หน้ากรอกข้อมูลสามารถแสดงข้อมูลรวมได้สูงสุด **8 Batch** ในหน้าเดียว เพื่อให้ผู้ใช้งานสามารถกรอกและตรวจสอบข้อมูลของแต่ละ Batch ได้พร้อมกัน
-
----
-
-## 🧪 3. Buffer1_PRP1 — After Past
-
-ตาราง `buffer1_prp1` ใช้สำหรับจัดเก็บข้อมูลในขั้นตอน **After Past**
-
-```text
-Product_ID
-     │
-     ▼
-buffer1_prp1
-     │
-     ▼
-After Past Data
-```
-
-ในขั้นตอนนี้มีการเพิ่มการตรวจสอบค่า **SNF** ซึ่งแตกต่างจากกระบวนการของ PRP3
-
----
-
-## ⚙️ 4. Buffer2_PRP1 — Standardized
-
-ตาราง `buffer2_prp1` ใช้สำหรับจัดเก็บข้อมูลในขั้นตอน **Standardized**
-
-ในขั้นตอนนี้ **Super** จะเป็นผู้ตรวจสอบความถูกต้องของข้อมูล และระบบจะคำนวณค่าที่เกี่ยวข้องโดยอัตโนมัติ
+### ⚙️ 4.4 Standardized
 
 ```text
 Standardized
      │
      ▼
-Super ตรวจสอบ
-     │
-     ▼
-ตรวจสอบความถูกต้อง
+Super ตรวจสอบความถูกต้อง
      │
      ├──────────────┐
      ▼              ▼
 BOM_Volume     Buffer_Volume
+(คำนวณอัตโนมัติ)
 ```
 
-ระบบจะคำนวณ
-
-* `BOM_Volume`
-* `Buffer_Volume`
-
-เพื่อลดการคำนวณด้วยตนเองและช่วยลดข้อผิดพลาดในการบันทึกข้อมูล
+ระบบคำนวณค่าอัตโนมัติเพื่อลดการคำนวณด้วยตนเองและลดข้อผิดพลาดในการบันทึกข้อมูล
 
 ---
 
-## 📋 5. Specification — PRP_Spec
+## 📦 5. Finish-good
 
-ระบบมีการตรวจสอบข้อมูลตาม Specification จากตาราง `PRP_Spec`
-
-`PRP_Spec` ใช้เป็นเกณฑ์สำหรับตรวจสอบข้อมูลต่อไปนี้
-
-| Specification | รายละเอียด             |
-| ------------- | ---------------------- |
-| `Source`      | แหล่งที่มาของผลิตภัณฑ์ |
-| `Flavor`      | รสชาติ                 |
-| `Size`        | ขนาด                   |
+* รับ `Product_ID` ตั้งแต่ตอน Sup สร้าง (ไม่ได้รับจาก 4 หน้าใน Yield)
+* เก็บข้อมูลเป็น **Row**
+* Automation **`SaveBatch`** วนลูปสร้าง Row ตามจำนวน Batch ที่ผลิต
 
 ```text
-                         PRP_Spec
-                            │
-              ┌─────────────┼─────────────┐
-              ▼             ▼             ▼
-           Source         Flavor         Size
-              │             │             │
-              └─────────────┼─────────────┘
-                            ▼
-                      ตรวจสอบ Spec
+Product_ID + จำนวน Batch
+          │
+          ▼
+  Automation: SaveBatch
+          │  (วนลูป)
+          ▼
+ Row ที่ 1, 2, 3 ... N
 ```
 
 ---
 
-## 🗃️ 6. Database Relationship
+## 📋 6. Specification — PRP_Spec
 
-ภาพรวมการจัดเก็บข้อมูลของ **PRP1 นมสด**
-
-`Product_ID` เป็นข้อมูลอ้างอิงหลักที่ใช้เชื่อมโยงข้อมูล โดยแต่ละตารางใช้สำหรับจัดเก็บข้อมูลของแต่ละกระบวนการ
-
-### ส่วนที่ 1
+ระบบตรวจสอบข้อมูลตามเกณฑ์จากตาราง `PRP_Spec` โดยต้องใช้ทั้ง 3 ค่าในการตรวจสอบ
 
 ```text
-                         Prp 3 table
-                              │
-                              │ Product_ID
-                              ▼
-                         Product_ID
-                              │
-          ┌───────────────────┼───────────────────┬───────────────────┐
-          │                   │                   │                   │
-          ▼                   ▼                   ▼                   ▼
-    prp1thermised       blendingprp1        buffer1_prp1        buffer2_prp1
-      Thermised           Recombined           After Past          Standardized
-          │                   │                   │                   │
-          └───────────────────┴───────────────────┴───────────────────┘
-                                      │
-                                      ▼
-                                 Finish-good
+PRP_Spec
+   │
+   ├── Source
+   ├── Flavor
+   └── Size
 ```
 
-> **หมายเหตุ:** `prp1thermised`, `blendingprp1`, `buffer1_prp1` และ `buffer2_prp1` เป็นชื่อ Table ที่ใช้จัดเก็บข้อมูลของแต่ละหน้า ไม่ได้หมายถึงลำดับการส่งข้อมูลระหว่าง Table
+| Specification | รายละเอียด |
+| ------------- | ---------- |
+| `Source` | แหล่งที่มาของผลิตภัณฑ์ |
+| `Flavor` | รสชาติ |
+| `Size` | ขนาด |
 
 ---
 
 ## ⭐ Key Points
 
-| รายการ                      | รายละเอียด                                   |
-| --------------------------- | -------------------------------------------- |
-| **Product**                 | PRP1 Fresh Milk                              |
-| **Product_ID**              | รับจาก `Prp 3 table`                         |
-| **Thermised**               | `prp1thermised`                              |
-| **Recombined**              | `blendingprp1`                               |
-| **After Past**              | `buffer1_prp1`                               |
-| **Standardized**            | `buffer2_prp1`                               |
-| **Batch Display**           | แสดงรวมได้สูงสุด 8 Batch                     |
-| **Thermised**               | มี Model ตรวจสอบค่า pH น้ำ                   |
-| **Thermised ต่างจาก PRP3**  | ไม่มี Sediment และ Water Add                 |
-| **After Past ต่างจาก PRP3** | เพิ่มค่า SNF                                 |
-| **Standardized**            | Super ตรวจสอบความถูกต้อง                     |
-| **Calculation**             | คำนวณ `BOM_Volume` และ `Buffer_Volume`       |
-| **Specification**           | `PRP_Spec` ใช้เป็นเกณฑ์ Source, Flavor, Size |
+| รายการ | รายละเอียด |
+| ------ | ---------- |
+| **Product** | PRP1 Fresh Milk |
+| **ตารางที่ใช้** | `prp3 table`, `Yield`, `Finish-good` (+ `PRP_Spec` เป็นตารางเกณฑ์) |
+| **การสร้าง Product_ID** | Sup สร้างจาก Product + Date + Week + Loop + Group |
+| **การบันทึก Product_ID** | บันทึกลง 3 ตารางพร้อมกัน: `prp3 table`, `Yield`, `Finish-good` |
+| **prp3 table** | เก็บ Product_ID, Flavor, Batch เป็นคอลัมน์ สูงสุด 8 Batch |
+| **Yield** | เก็บเป็นคอลัมน์ สูงสุด 8 Batch มี 4 หน้าย่อย |
+| **Finish-good** | เก็บเป็น Row สร้างด้วย Automation `SaveBatch` |
+| **Thermised** | `prp1thermised` — ตรวจ pH, มี Model pH น้ำ, ไม่มี Sediment และ Water Add |
+| **Recombine** | `blendingprp1` |
+| **After Past** | `buffer1_prp1` — เพิ่มค่า SNF |
+| **Standardized** | `buffer2_prp1` — Super ตรวจสอบ, คำนวณ `BOM_Volume` และ `Buffer_Volume` |
+| **Specification** | `PRP_Spec` ใช้ Source, Flavor, Size ตรวจสอบค่า |
