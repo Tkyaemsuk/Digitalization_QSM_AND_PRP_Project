@@ -5,6 +5,25 @@
 
 ---
 
+## 🔖 Navigation
+
+* [📌 Overview](#-overview)
+* [🥛 Soy Milk Production Flow](#-soy-milk-production-flow)
+* [🆔 Product ID](#-product-id)
+* [🗃️ Data Storage](#️-data-storage)
+* [📊 Row-Based Data Structure](#-row-based-data-structure)
+* [⚙️ Automation](#️-automation)
+* [🔢 Batch Generation](#-batch-generation)
+* [🧮 Batch Count Logic](#-batch-count-logic)
+* [📝 Normal Batch](#-normal-batch)
+* [🏷️ Product & Batch Size](#️-product--batch-size)
+* [🔄 System Workflow](#-system-workflow)
+* [📋 Example](#-example)
+* [🎯 Key Features](#-key-features)
+* [🧩 Summary](#-summary)
+
+---
+
 ## 📌 Overview
 
 ในกระบวนการผลิตของ **PRP1** มีการผลิตทั้งนมถั่วเหลืองและนมสด โดยแบ่งกระบวนการผลิตออกเป็นทั้งหมด **5 Groups**
@@ -69,7 +88,7 @@ prp1_table    Finish-good
 
 ---
 
-# 🆔 Product ID
+## 🆔 Product ID
 
 เมื่อผู้ใช้งานเลือก Group แล้ว ระบบจะนำ **Product Date + Group** มาสร้างเป็น **Product ID**
 
@@ -105,7 +124,7 @@ Group        = C
 
 ---
 
-# 🗃️ Data Storage
+## 🗃️ Data Storage
 
 ข้อมูลจะถูกจัดเก็บลงในตาราง
 
@@ -116,7 +135,7 @@ Group        = C
 
 ---
 
-# 📊 Row-Based Data Structure
+## 📊 Row-Based Data Structure
 
 ในกระบวนการผลิตมีประมาณ **13 Batch**
 
@@ -145,7 +164,7 @@ Batch 124-2
 
 ---
 
-# ⚙️ Automation
+## ⚙️ Automation
 
 ระบบใช้ **Budibase Automation** ในการสร้าง Batch และบันทึกข้อมูลเป็น Row
 
@@ -159,7 +178,7 @@ Automation นี้ทำหน้าที่สร้างข้อมูล
 
 ---
 
-# 🔢 Batch Generation
+## 🔢 Batch Generation
 
 ผู้ใช้งานสามารถกำหนดข้อมูลสำหรับสร้าง Batch ได้จาก
 
@@ -194,28 +213,9 @@ Batch Count = 2
 126-2
 ```
 
-### Flow
-
-```text
-Start Batch = 125
-       │
-       ▼
-Batch Count = 2
-       │
-       ▼
-Generate Product Batches
-       │
- ┌─────┼─────┐
- ▼     ▼     ▼
-125-1 125-2 126-1
-              │
-              ▼
-            126-2
-```
-
 ---
 
-# 📝 Normal Batch
+## 📝 Normal Batch
 
 หาก Batch นั้น **ไม่ต้องการแบ่ง Batch** ให้กรอกเฉพาะ **Start Batch**
 
@@ -243,7 +243,7 @@ Batch Count = ไม่ระบุ
 
 ---
 
-# 🏷️ Product & Batch Size
+## 🏷️ Product & Batch Size
 
 เมื่อผู้ใช้งานเลือก **Product** และระบุ **Batch Size** ระบบจะนำข้อมูลดังกล่าวไปกำหนดให้กับทุก Row ที่ถูกสร้างขึ้น
 
@@ -267,7 +267,7 @@ Batch Size = 30
 
 ---
 
-# 🔄 System Workflow
+## 🔄 System Workflow
 
 ```text
               ┌──────────────────┐
@@ -310,13 +310,13 @@ Batch Size = 30
           │       Save Data         │
           │                         │
           │  • prp1_table           │
-          │  • Finish-good           │
+          │  • Finish-good          │
           └─────────────────────────┘
 ```
 
 ---
 
-# 📋 Example
+## 📋 Example
 
 ### Input
 
@@ -345,7 +345,7 @@ Group       = C
 
 ---
 
-# 🎯 Key Features
+## 🎯 Key Features
 
 * 🌱 รองรับการสร้าง Product ID สำหรับ Soy Milk
 * 🥛 รองรับกระบวนการผลิต PRP1
@@ -361,7 +361,7 @@ Group       = C
 
 ---
 
-# 🧩 Summary
+## 🧩 Summary
 
 ระบบ **Create Tag Plant 1 — Soy Milk** ถูกออกแบบมาเพื่อให้การสร้าง Product ID และ Batch ในกระบวนการผลิต PRP1 มีความยืดหยุ่นและรองรับการขยายข้อมูลในอนาคต
 
