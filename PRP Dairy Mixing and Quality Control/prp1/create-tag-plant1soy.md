@@ -1,210 +1,195 @@
 # 🌱 Create Tag Plant 1 — Soy Milk
 
-ระบบสำหรับสร้าง **Product ID** และจัดการ Batch ของกระบวนการผลิต **PRP1**
-รองรับการผลิตทั้ง **นมถั่วเหลือง (Soy Milk)** และ **นมสด (Fresh Milk)**
+ระบบสำหรับสร้าง **Product Date, Batch และ Product ID** สำหรับกระบวนการผลิต **PRP1**
 
----
+รองรับผลิตภัณฑ์:
 
-## 🔖 Navigation
+* 🌱 **Soy Milk**
+* 🥛 **Fresh Milk**
 
-* [📌 Overview](#-overview)
-* [🥛 Soy Milk Production Flow](#-soy-milk-production-flow)
-* [🆔 Product ID](#-product-id)
-* [🗃️ Data Storage](#️-data-storage)
-* [📊 Row-Based Data Structure](#-row-based-data-structure)
-* [⚙️ Automation](#️-automation)
-* [🔢 Batch Generation](#-batch-generation)
-* [🧮 Batch Count Logic](#-batch-count-logic)
-* [📝 Normal Batch](#-normal-batch)
-* [🏷️ Product & Batch Size](#️-product--batch-size)
-* [🔄 System Workflow](#-system-workflow)
-* [📋 Example](#-example)
-* [🎯 Key Features](#-key-features)
-* [🧩 Summary](#-summary)
+ระบบครอบคลุมตั้งแต่การสร้าง **Product Date โดย SUP**, การสร้าง **Batch อัตโนมัติ**, การลงข้อมูลตาม Batch, การเลือก **Group** ไปจนถึงการสร้าง **Product ID** ก่อนเข้าสู่กระบวนการผลิตขั้นตอนถัดไป
 
 ---
 
 ## 📌 Overview
 
-ในกระบวนการผลิตของ **PRP1** มีการผลิตทั้งนมถั่วเหลืองและนมสด โดยแบ่งกระบวนการผลิตออกเป็นทั้งหมด **5 Groups**
+กระบวนการผลิต **PRP1** เริ่มต้นจากหน้า **Create Tag Plant 1 Soy** โดย `SUP (Supervisor)` เป็นผู้กำหนดข้อมูลสำหรับรอบการผลิต
 
-| Group | รายละเอียด         |
-| :---: | ------------------ |
-|   A   | Production Group A |
-|   B   | Production Group B |
-|   C   | Production Group C |
-|   D   | Production Group D |
-|   E   | Production Group E |
+ข้อมูลหลักที่ใช้ในการสร้าง Product Date ได้แก่:
 
-สำหรับ **นมถั่วเหลือง** กระบวนการผลิตจะเริ่มต้นจาก **Soy Base 1 Batch** จากนั้นเมื่อเข้าสู่กระบวนการ **Buffer** จะแบ่งออกเป็น
+| Field            | Description            |
+| ---------------- | ---------------------- |
+| **Product Date** | วันที่ผลิต             |
+| **Loop**         | รอบการผลิต             |
+| **Week**         | สัปดาห์การผลิต         |
+| **Start Batch**  | หมายเลข Batch เริ่มต้น |
+| **Batch Count**  | จำนวน Batch หลัก       |
+| **Product**      | ผลิตภัณฑ์              |
+| **Batch Size**   | ขนาดของ Batch          |
+
+จากข้อมูลดังกล่าว ระบบจะสร้าง **Product Date และ Batch** ลงในตาราง `prp1_table`
+
+> **หมายเหตุ:** ในขั้นตอนการสร้าง Product Date จะยังไม่กำหนด `Group` เนื่องจาก Batch สามารถเปลี่ยน Group ได้ในภายหลัง
+
+---
+
+## 🥛 Production Flow
+
+ภาพรวมกระบวนการผลิต PRP1:
 
 ```text
-Soy Base
-   │
-   ▼
-1 Batch
-   │
-   ▼
-Buffer
- ┌─┴─┐
- ▼   ▼
-/1  /2
+Create Tag Plant 1 Soy
+          │
+          ▼
+    SUP สร้าง Product Date
+          │
+          ▼
+      Generate Batch
+          │
+          ▼
+      Save to prp1_table
+          │
+          ▼
+    ผู้ใช้งานเลือก Batch
+          │
+          ▼
+        Storage
+          │
+          ▼
+        Blending
+          │
+          ▼
+       After Past
+          │
+          ▼
+      Standardized
+          │
+          ▼
+       เลือก Group
+          │
+          ▼
+   Generate Product ID
+          │
+          ▼
+  ลงข้อมูล Standardized
 ```
 
 ---
 
-## 🥛 Soy Milk Production Flow
+## 📅 Product Date
 
-การสร้าง Product ID ของนมถั่วเหลืองจะเริ่มจากการสร้าง **Product Date** ก่อน
+Product Date ถูกสร้างจากข้อมูลที่ `SUP` กำหนดในหน้า **Create Tag Plant 1 Soy**
 
-ในขั้นตอนแรก **ยังไม่มีการกำหนด Group**
-
-เนื่องจากในการผลิต 1 Batch สามารถมีการเปลี่ยน Group ได้ จึงกำหนด Group ในขั้นตอนสุดท้าย หลังจากเลือก Group แล้ว ระบบจึงนำ Group มาสร้างเป็น Product ID
+### Input
 
 ```text
-Create Product
-      │
-      ▼
- Product Date
-      │
-      ▼
- Week / Loop
-      │
-      ▼
-Generate Batches
-      │
-      ▼
- Select Group
-      │
-      ▼
-Generate Product ID
-      │
-      ▼
- Save Data
-   ┌──┴───────────┐
-   ▼              ▼
-prp1_table    Finish-good
+Product Date = 7/30/2026
+Loop         = 1 Week
+Week         = 31
 ```
+
+ระบบจะนำข้อมูลมาสร้าง `Product_Date` ในรูปแบบ:
+
+```text
+300726-31Th1
+```
+
+### Product Date Format
+
+```text
+DDMMYY-WW + Loop
+```
+
+ตัวอย่าง:
+
+```text
+300726-31Th1
+```
+
+ประกอบด้วย:
+
+```text
+30      = วันที่
+07      = เดือน
+26      = ปี
+31      = Week
+Th1     = Loop
+```
+
+ดังนั้น:
+
+```text
+300726-31Th1
+```
+
+จะถูกใช้เป็นค่า **Product_Date** ภายใน `prp1_table`
 
 ---
 
-## 🆔 Product ID
+## 🔢 Batch
 
-เมื่อผู้ใช้งานเลือก Group แล้ว ระบบจะนำ **Product Date + Group** มาสร้างเป็น **Product ID**
+**Batch** คือหน่วยการผลิตที่ใช้สำหรับติดตามข้อมูลตลอดกระบวนการ PRP1
 
-### ตัวอย่างข้อมูล
+Batch จะถูกสร้างพร้อมกับ Product Date และจัดเก็บในรูปแบบ **1 Batch = 1 Row**
 
-```text
-Product Date = 300726-31Th1
-Week         = 1
-Loop         = 1
-Size         = 30
-Flavor       = D
-Batch        = 123
-Group        = C
-```
-
-ระบบจะสร้าง Product ID เป็น
+ตัวอย่าง:
 
 ```text
-300726-31Th1-C
+Product_Date   Batch
+300726-31Th1   125-1
+300726-31Th1   125-2
+300726-31Th1   126-1
+300726-31Th1   126-2
 ```
 
-### Product ID Format
+### ✂️ Batch Split
+
+กรณีที่ Batch หลักต้องถูกแบ่งออกเป็น 2 ส่วน ระบบจะแบ่งเป็น:
 
 ```text
-[Product Date]-[Group]
+125-1
+125-2
 ```
 
-ตัวอย่าง
+โดย:
 
 ```text
-300726-31Th1-C
+125 = Batch หลัก
+-1  = Batch ย่อยส่วนที่ 1
+-2  = Batch ย่อยส่วนที่ 2
 ```
-
----
-
-## 🗃️ Data Storage
-
-ข้อมูลจะถูกจัดเก็บลงในตาราง
-
-* `prp1_table`
-* `Finish-good`
-
-> **Finish-good** เป็นตารางเดียวกันที่ใช้ร่วมกันทั้ง 3 Plans โดยรายละเอียดของตารางและการทำงานได้อธิบายไว้ใน **PRP3**
-
----
-
-## 📊 Row-Based Data Structure
-
-ในกระบวนการผลิตมีประมาณ **13 Batch**
-
-หากออกแบบ Database โดยสร้าง Column แยกสำหรับแต่ละ Batch จะทำให้มีจำนวน Column เพิ่มขึ้นจำนวนมาก และทำให้การเพิ่มข้อมูลในอนาคตทำได้ยาก
-
-ดังนั้นระบบจึงเลือกจัดเก็บข้อมูลในรูปแบบ **Row**
-
-ตัวอย่าง
-
-```text
-Batch 123-1
-Batch 123-2
-Batch 124-1
-Batch 124-2
-...
-```
-
-### ข้อดี
-
-* ✅ ลดจำนวน Column ใน Database
-* ✅ รองรับจำนวน Batch ที่เพิ่มขึ้น
-* ✅ สามารถเพิ่มข้อมูลได้อย่างยืดหยุ่น
-* ✅ ง่ายต่อการ Query และจัดการข้อมูล
-* ✅ รองรับการแบ่ง Batch
-* ✅ ลดความซับซ้อนของโครงสร้างตาราง
-
----
-
-## ⚙️ Automation
-
-ระบบใช้ **Budibase Automation** ในการสร้าง Batch และบันทึกข้อมูลเป็น Row
-
-### Automation Name
-
-```text
-Generate Product Batches
-```
-
-Automation นี้ทำหน้าที่สร้างข้อมูล Batch ตามข้อมูลที่ **SUP (Supervisor)** กำหนด และบันทึกข้อมูลลงในรูปแบบ Row
 
 ---
 
 ## 🔢 Batch Generation
 
-ผู้ใช้งานสามารถกำหนดข้อมูลสำหรับสร้าง Batch ได้จาก
+ข้อมูลที่ใช้ในการสร้าง Batch:
 
-| Input           | Description                  |
-| --------------- | ---------------------------- |
-| **Start Batch** | เลข Batch ที่ต้องการเริ่มต้น |
-| **Batch Count** | จำนวน Batch ที่ต้องการสร้าง  |
-| **Product**     | Product ที่ต้องการผลิต       |
-| **Batch Size**  | ขนาดของ Batch                |
-
----
-
-## 🧮 Batch Count Logic
-
-เมื่อมีการระบุ **Start Batch** และ **Batch Count** ระบบจะสร้าง Batch และแบ่งเป็น `/1` และ `/2` ให้อัตโนมัติ
+| Input            | Description            |
+| ---------------- | ---------------------- |
+| **Start Batch**  | หมายเลข Batch เริ่มต้น |
+| **Batch Count**  | จำนวน Batch หลัก       |
+| **Product**      | ผลิตภัณฑ์              |
+| **Batch Size**   | ขนาด Batch             |
+| **Product Date** | วันที่ผลิต             |
 
 ### ตัวอย่าง
 
-กำหนด
+กำหนด:
 
 ```text
 Start Batch = 125
 Batch Count = 2
 ```
 
-ระบบจะสร้างทั้งหมด **4 Rows**
+ระบบจะสร้าง Batch หลัก:
+
+```text
+125
+126
+```
+
+หากกำหนดให้ Split Batch:
 
 ```text
 125-1
@@ -213,28 +198,91 @@ Batch Count = 2
 126-2
 ```
 
+ดังนั้นระบบจะสร้างทั้งหมด:
+
+```text
+4 Rows
+```
+
+---
+
+## 🧮 Batch Count Logic
+
+> **Batch Count หมายถึงจำนวน Batch หลัก ไม่ใช่จำนวน Row ที่ระบบสร้าง**
+
+ตัวอย่าง:
+
+```text
+Start Batch = 125
+Batch Count = 2
+```
+
+หมายถึง:
+
+```text
+Batch หลักที่ 1 = 125
+Batch หลักที่ 2 = 126
+```
+
+เมื่อ Split Batch:
+
+```text
+125
+ ├── 125-1
+ └── 125-2
+
+126
+ ├── 126-1
+ └── 126-2
+```
+
+ผลลัพธ์:
+
+```text
+125-1
+125-2
+126-1
+126-2
+```
+
+รวมทั้งหมด **4 Rows**
+
 ---
 
 ## 📝 Normal Batch
 
-หาก Batch นั้น **ไม่ต้องการแบ่ง Batch** ให้กรอกเฉพาะ **Start Batch**
+กรณีที่ไม่ต้องการแบ่ง Batch เป็น Batch ย่อย ระบบจะสร้างเฉพาะ Batch หลัก
 
-โดยไม่ต้องกรอก **Batch Count**
-
-### ตัวอย่าง
+ตัวอย่าง:
 
 ```text
 Start Batch = 125
-Batch Count = ไม่ระบุ
+Batch Count = 1
+Split       = No
 ```
 
-ระบบจะสร้างเป็น
+ผลลัพธ์:
 
 ```text
 125
 ```
 
-แทนที่จะเป็น
+จะไม่สร้าง:
+
+```text
+125-1
+125-2
+```
+
+ดังนั้นระบบรองรับทั้ง:
+
+### Normal Batch
+
+```text
+125
+```
+
+### Split Batch
 
 ```text
 125-1
@@ -245,16 +293,16 @@ Batch Count = ไม่ระบุ
 
 ## 🏷️ Product & Batch Size
 
-เมื่อผู้ใช้งานเลือก **Product** และระบุ **Batch Size** ระบบจะนำข้อมูลดังกล่าวไปกำหนดให้กับทุก Row ที่ถูกสร้างขึ้น
+เมื่อ `SUP` กำหนด Product และ Batch Size ระบบจะนำข้อมูลดังกล่าวไปใช้กับ Batch ที่สร้างจาก Product Date เดียวกัน
 
-### ตัวอย่าง
+ตัวอย่าง:
 
 ```text
 Product    = Soy Milk
 Batch Size = 30
 ```
 
-เมื่อระบบ Generate Batch
+ระบบสร้าง:
 
 ```text
 125-1
@@ -263,139 +311,298 @@ Batch Size = 30
 126-2
 ```
 
-ข้อมูล Product และ Batch Size จะถูกกำหนดให้กับทุก Row โดยอัตโนมัติ
+ข้อมูลที่บันทึกในแต่ละ Row:
+
+| Batch | Product  | Batch Size |
+| ----- | -------- | ---------: |
+| 125-1 | Soy Milk |         30 |
+| 125-2 | Soy Milk |         30 |
+| 126-1 | Soy Milk |         30 |
+| 126-2 | Soy Milk |         30 |
+
+---
+
+## 🆔 Product ID
+
+**Product ID จะยังไม่ถูกสร้างในขั้นตอน Create Product Date**
+
+ระบบจะสร้าง Product ID เมื่อผู้ใช้งานเข้าสู่ขั้นตอน **Standardized** และเลือก `Group` แล้ว
+
+### เหตุผล
+
+Batch เดียวกันสามารถมีการเปลี่ยน Group ได้ในภายหลัง ดังนั้นจึงไม่ควรกำหนด Group ตั้งแต่ตอนสร้าง Batch
+
+---
+
+### Product ID Format
+
+```text
+[Product Date]-[Group]
+```
+
+ตัวอย่าง:
+
+```text
+Product Date = 300726-31Th1
+Group        = C
+```
+
+ระบบจะสร้าง:
+
+```text
+300726-31Th1-C
+```
+
+### ตัวอย่างเต็ม
+
+```text
+Product Date = 300726-31Th1
+Batch        = 125-1
+Group        = C
+```
+
+Product ID:
+
+```text
+300726-31Th1-C
+```
+
+> **หมายเหตุ:** `Batch` และ `Product ID` เป็นคนละข้อมูลกัน
+>
+> * **Batch** ใช้ระบุหน่วยการผลิต
+> * **Product ID** ใช้ระบุผลิตภัณฑ์ตาม Product Date และ Group
+
+---
+
+## 🗃️ Data Storage
+
+ข้อมูลหลักของกระบวนการ Create Tag Plant 1 ถูกจัดเก็บใน:
+
+```text
+prp1_table
+```
+
+ส่วนข้อมูลที่เกี่ยวข้องกับผลิตภัณฑ์สำเร็จรูปจะถูกจัดเก็บหรือเชื่อมโยงกับ:
+
+```text
+Finish-good
+```
+
+> `Finish-good` เป็นตารางที่ใช้ร่วมกันทั้ง 3 Plans โดยรายละเอียดโครงสร้างและการทำงานของตารางสามารถดูเพิ่มเติมได้ในเอกสาร **PRP3**
+
+---
+
+## 📊 `prp1_table` Structure
+
+### Initial Data
+
+ในช่วงที่สร้าง Product Date และ Batch ค่า `Group` และ `Product ID` จะยังไม่มีค่า
+
+| Product_Date | Batch | Product  | Batch Size | Group | Product ID |
+| ------------ | ----- | -------- | ---------: | ----- | ---------- |
+| 300726-31Th1 | 125-1 | Soy Milk |         30 | -     | -          |
+| 300726-31Th1 | 125-2 | Soy Milk |         30 | -     | -          |
+| 300726-31Th1 | 126-1 | Soy Milk |         30 | -     | -          |
+| 300726-31Th1 | 126-2 | Soy Milk |         30 | -     | -          |
+
+### หลังเลือก Group
+
+เมื่อผู้ใช้งานเข้าสู่ Standardized และเลือก:
+
+```text
+Group = C
+```
+
+ระบบจะสร้าง Product ID:
+
+```text
+300726-31Th1-C
+```
+
+ตัวอย่าง:
+
+| Product_Date | Batch | Product  | Batch Size | Group | Product ID     |
+| ------------ | ----- | -------- | ---------: | ----- | -------------- |
+| 300726-31Th1 | 125-1 | Soy Milk |         30 | C     | 300726-31Th1-C |
+
+---
+
+## 📊 Row-Based Data Structure
+
+ระบบจัดเก็บข้อมูล Batch แบบ **Row-Based Structure**
+
+แทนการสร้าง Column แยกสำหรับแต่ละ Batch
+
+### ตัวอย่าง
+
+```text
+Batch 125-1 → 1 Row
+Batch 125-2 → 1 Row
+Batch 126-1 → 1 Row
+Batch 126-2 → 1 Row
+```
+
+หากมี 13 Batch:
+
+```text
+13 Batch
+   ↓
+13 Rows
+```
+
+ไม่จำเป็นต้องเพิ่ม Column ใหม่สำหรับแต่ละ Batch
+
+### ข้อดี
+
+* ✅ ลดจำนวน Column ใน Database
+* ✅ รองรับจำนวน Batch ที่เพิ่มขึ้น
+* ✅ รองรับการ Split Batch
+* ✅ Query ข้อมูลง่าย
+* ✅ เพิ่มข้อมูลในอนาคตได้ยืดหยุ่น
+* ✅ ลดความซับซ้อนของ Database Structure
+
+---
+
+## ⚙️ Automation
+
+ระบบใช้ **Budibase Automation** สำหรับสร้าง Batch และบันทึกข้อมูลลง `prp1_table`
+
+### Automation Name
+
+```text
+Generate Product Batches
+```
+
+### หน้าที่ของ Automation
+
+1. รับข้อมูลที่ SUP กำหนด
+2. สร้าง Product Date
+3. สร้าง Batch ตามจำนวนที่กำหนด
+4. ตรวจสอบการ Split Batch
+5. สร้าง Row สำหรับแต่ละ Batch
+6. บันทึก Product Date
+7. บันทึก Product
+8. บันทึก Batch Size
+9. บันทึกข้อมูลลง `prp1_table`
+
+> ⚠️ Automation นี้ **ยังไม่สร้าง Product ID** เนื่องจากในขั้นตอนนี้ยังไม่มีการกำหนด Group
 
 ---
 
 ## 🔄 System Workflow
 
 ```text
-              ┌──────────────────┐
-              │  Create Product  │
-              └────────┬─────────┘
-                       │
-                       ▼
-              ┌──────────────────┐
-              │   Product Date   │
-              └────────┬─────────┘
-                       │
-                       ▼
-              ┌──────────────────┐
-              │    Week / Loop   │
-              └────────┬─────────┘
-                       │
-                       ▼
-        ┌────────────────────────────┐
-        │ Generate Product Batches   │
-        └─────────────┬──────────────┘
-                      │
-                      ▼
-             ┌─────────────────┐
-             │ Product / Size  │
-             └────────┬────────┘
-                      │
-                      ▼
-             ┌─────────────────┐
-             │   Select Group  │
-             └────────┬────────┘
-                      │
-                      ▼
-             ┌─────────────────┐
-             │ Generate        │
-             │ Product ID      │
-             └────────┬────────┘
-                      │
-                      ▼
-          ┌─────────────────────────┐
-          │       Save Data         │
-          │                         │
-          │  • prp1_table           │
-          │  • Finish-good          │
-          └─────────────────────────┘
+┌──────────────────────────────┐
+│ Create Tag Plant 1 Soy       │
+│ SUP                          │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Product Date                 │
+│                              │
+│ 7/30/2026                    │
+│ Loop = 1 Week                │
+│ Week = 31                    │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Generate Product_Date        │
+│                              │
+│ 300726-31Th1                 │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Generate Batch               │
+│                              │
+│ 125-1                        │
+│ 125-2                        │
+│ 126-1                        │
+│ 126-2                        │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Save to prp1_table           │
+│                              │
+│ Product Date                 │
+│ Batch                        │
+│ Product                      │
+│ Batch Size                   │
+└──────────────┬───────────────┘
+               │
+               ▼
+        ผู้ใช้งานเลือก Batch
+               │
+               ▼
+┌──────────────────────────────┐
+│ Storage                      │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Blending                     │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ After Past                   │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Standardized                 │
+│                              │
+│ Select Group                 │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Generate Product ID          │
+│                              │
+│ 300726-31Th1-C               │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Standardized Data            │
+└──────────────────────────────┘
 ```
 
 ---
 
-## 📋 Example
+# 📋 Example
 
-### Input
+## 1. SUP สร้าง Product Date
+
+```text
+Product Date = 7/30/2026
+Loop         = 1 Week
+Week         = 31
+```
+
+ระบบสร้าง:
+
+```text
+Product_Date = 300726-31Th1
+```
+
+---
+
+## 2. กำหนด Batch
 
 ```text
 Start Batch = 125
 Batch Count = 2
 Product     = Soy Milk
 Batch Size  = 30
-Group       = C
+Split       = Yes
 ```
 
-### Generated Rows
+ระบบสร้าง:
 
-| Batch | Product  | Batch Size | Group |
-| ----- | -------- | ---------: | :---: |
-| 125-1 | Soy Milk |         30 |   C   |
-| 125-2 | Soy Milk |         30 |   C   |
-| 126-1 | Soy Milk |         30 |   C   |
-| 126-2 | Soy Milk |         30 |   C   |
-
-### Generated Product ID
-
-```text
-300726-31Th1-C
-```
-
----
-
-## 🎯 Key Features
-
-* 🌱 รองรับการสร้าง Product ID สำหรับ Soy Milk
-* 🥛 รองรับกระบวนการผลิต PRP1
-* 🔢 สร้าง Batch อัตโนมัติ
-* ✂️ รองรับการแบ่ง Batch เป็น `/1` และ `/2`
-* ⚙️ ใช้ Automation `Generate Product Batches`
-* 📊 จัดเก็บข้อมูลแบบ Row-Based
-* 🏷️ Generate Product และ Batch Size ให้ทุก Row
-* 🆔 Generate Product ID จาก Product Date และ Group
-* 💾 บันทึกข้อมูลลง `prp1_table`
-* 📦 รองรับการบันทึกลง `Finish-good`
-* 🔄 รองรับการเพิ่มจำนวน Batch ในอนาคต
-
----
-
-## 🧩 Summary
-
-ระบบ **Create Tag Plant 1 — Soy Milk** ถูกออกแบบมาเพื่อให้การสร้าง Product ID และ Batch ในกระบวนการผลิต PRP1 มีความยืดหยุ่นและรองรับการขยายข้อมูลในอนาคต
-
-### Process Summary
-
-```text
-Product Date
-     │
-     ▼
-Week / Loop
-     │
-     ▼
-Batch Generation
-     │
-     ▼
-Generate Rows
-     │
-     ▼
-Product / Batch Size
-     │
-     ▼
-Select Group
-     │
-     ▼
-Generate Product ID
-     │
-     ▼
-Save to Database
-     │
- ┌───┴────────────┐
- ▼                ▼
-prp1_table    Finish-good
-```
-
-> **Automation:** `Generate Product Batches`
-> **Main Table:** `prp1_table`
-> **Shared Table:** `Finish-good`
+| Product Date | Batch | Product  | Batch Size |
+| ------------ | ----- | -------- | ---------: |
+| 300726-31Th1 | 125-1 | Soy Milk |         30 |
