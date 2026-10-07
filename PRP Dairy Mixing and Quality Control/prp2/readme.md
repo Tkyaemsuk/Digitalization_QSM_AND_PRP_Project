@@ -1,6 +1,5 @@
 # PRP2 — Dairy Mixing and Quality Control
 
-[← PRP overview](../README.md)
 
 ## 📌 Overall Project Overview
 
