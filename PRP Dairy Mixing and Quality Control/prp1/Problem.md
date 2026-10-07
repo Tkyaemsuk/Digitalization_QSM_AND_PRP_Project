@@ -1,81 +1,56 @@
-# ภาพรวมของปัญหาและแนวทางการปรับปรุง
+# PRP1 — Known issues and improvements
 
-## 1. การเพิ่ม Product ในอนาคต
+[← PRP1 overview](README.md)
 
-เนื่องจาก **นมสด** มีกระบวนการผลิตรูปแบบเดียวกับ **PRP3** ดังนั้นปัญหาที่อาจเกิดขึ้นจากการเพิ่ม Product ใหม่ในอนาคตจะมีลักษณะเดียวกันกับ PRP3
+| # | Topic | Status |
+|---|---|---|
+| 1 | Adding new products | Open — same issue as PRP3 |
+| 2 | Soy Milk Storage / Blending batch split | Open |
+| 3 | Overall Finish-good view | ✅ Done |
+| 4 | Operator employee-ID validation | ✅ Done |
 
-Product แต่ละประเภทอาจมีกระบวนการผลิตและข้อมูลที่ต้องบันทึกแตกต่างกัน จึงจำเป็นต้องออกแบบระบบให้สามารถรองรับการเพิ่ม Product ใหม่ได้ในอนาคต
+## 1. Adding new products
 
----
+Fresh Milk uses the PRP3 process, so it inherits PRP3's problem: each product needs different
+data and stages, and the current design may need new pages for every new product. See
+[PRP3 problems → adding new products](../prp3/problems.md#2-adding-new-products).
 
-## 2. กระบวนการ Storage และ Blending ของนมถั่วเหลือง
+## 2. Soy Milk Storage and Blending
 
-สำหรับ **นมถั่วเหลือง** กระบวนการ `Storage` และ `Blending` มีข้อกำหนดว่า **ไม่ควรแบ่งเลข Batch**
+In the real process, **Storage and Blending work on whole Batches** — they shouldn't be split.
+The system splits Batch numbers from the very first step, so operators **enter the same data
+twice** (once per sub-batch).
 
-แต่ในระบบปัจจุบันมีการแบ่งเลข Batch ตั้งแต่ขั้นตอนแรก ส่งผลให้ผู้ใช้งานต้องกรอกข้อมูล **2 รอบ**
+**Proposal:** separate the Storage and Blending steps and redesign their pages to match the real
+process. This would:
 
-### แนวทางการปรับปรุง
+- remove duplicate data entry
+- make Batch numbers less confusing
+- line the pages up with how production actually works
+- reduce entry errors
 
-ในอนาคตควรแยก `Storage` และ `Blending` ออกจากกัน และออกแบบหน้ากรอกข้อมูลใหม่ให้เหมาะสมกับกระบวนการผลิตจริง
+## 3. Overall Finish-good view — done
 
-**ผลที่คาดว่าจะได้รับ**
+Users needed one place to see all Finish-good data. A **Finish-good table view** now shows it on a
+single page:
 
-* ลดการกรอกข้อมูลซ้ำ
-* ลดความสับสนในการจัดการเลข Batch
-* ทำให้รูปแบบการบันทึกข้อมูลสอดคล้องกับกระบวนการผลิตจริง
-* ลดโอกาสเกิดข้อผิดพลาดจากการกรอกข้อมูล
+| Product | Batch | Group | Status |
+|---|---|---|---|
+| … | … | … | … |
 
----
+## 4. Operator employee-ID validation — done
 
-## 3. การแสดงข้อมูล Finish-good
+To stop badly formatted entries, the employee-ID field is now validated:
 
-ผู้ใช้งานต้องการเห็นข้อมูลของ **Finish-good ในภาพรวม** เพื่อให้สามารถตรวจสอบและติดตามข้อมูลได้ง่ายขึ้น
+| Rule | |
+|---|---|
+| Length | **6 characters** |
+| Emoji | Not allowed |
+| Anything else that doesn't match | Blocked |
 
-### การปรับปรุงในระบบปัจจุบัน
-
-ปัจจุบันระบบได้เพิ่ม **ตารางแสดงข้อมูล Finish-good** เพื่อให้ผู้ใช้งานสามารถดูข้อมูลในภาพรวมได้จากหน้าเดียว
-
-```text
-Finish-good
-     │
-     ▼
-┌─────────────────────────────────────┐
-│          Finish-good Table           │
-├──────────┬─────────┬───────┬────────┤
-│ Product  │ Batch   │ Group │ Status │
-├──────────┼─────────┼───────┼────────┤
-│ ...      │ ...     │ ...   │ ...    │
-└──────────┴─────────┴───────┴────────┘
+```mermaid
+flowchart LR
+    A[Operator enters employee ID] --> B{Valid?}
+    B -->|yes| C[Continue]
+    B -->|no| D[Input blocked]
 ```
-
----
-
-## 4. การตรวจสอบข้อมูลรหัสพนักงานของ Operator
-
-เพื่อป้องกันการกรอกข้อมูลที่ไม่ตรงตามรูปแบบที่กำหนด ระบบได้เพิ่มการตรวจสอบข้อมูลของ **Operator**
-
-### เงื่อนไขการกรอกข้อมูล
-
-| รายการ                   | เงื่อนไข           |
-| ------------------------ | ------------------ |
-| รหัสพนักงาน              | กรอกได้ 6 ตัวอักษร |
-| Emoji                    | ไม่อนุญาต          |
-| ข้อมูลที่ไม่ตรงตามรูปแบบ | ระบบจะบล็อกการกรอก |
-
-### การทำงาน
-
-```text
-Operator
-   │
-   ▼
-กรอกรหัสพนักงาน
-   │
-   ▼
-ตรวจสอบข้อมูล
-   │
-   ├── ถูกต้อง ──────► สามารถดำเนินการต่อ
-   │
-   └── ไม่ถูกต้อง ───► ระบบบล็อกการกรอก
-```
-
-ระบบจึงช่วยควบคุมให้ข้อมูลรหัสพนักงานมีรูปแบบที่ถูกต้อง และป้องกันการกรอก **Emoji หรือข้อมูลที่ไม่ตรงตามเงื่อนไข** ลงในระบบ
