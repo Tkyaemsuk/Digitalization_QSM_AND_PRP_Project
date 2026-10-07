@@ -1,75 +1,42 @@
-# ตาราง Finish-good และ Automation SaveBatch
+# Finish-good table and the SaveBatch automation
 
-## 📋 ภาพรวม
+[← PRP3 overview](README.md)
 
-ตาราง **Finish-good** เก็บข้อมูลหลังจากนมผ่านการผสมแล้ว ผ่านเครื่องฆ่าเชื้อ และบรรจุลงกล่อง โดยพนักงานจะไปหยิบนมมาเช็คค่าตาม **batch** ที่ได้ผลิต
+`Finish-good` stores the check done **after the milk has been mixed, sterilized and packed into
+cartons**: operators take a sample from each Batch and record the values.
+It is **shared by all plants** — PRP1 writes to it too.
 
-| หัวข้อ | รายละเอียด |
-|:---|:---|
-| **หน้าลงข้อมูล** | `/finish-good1/:user` |
-| **การเก็บข้อมูล** | 1 batch = 1 แถว |
-| **Automation** | `SaveBatch` (ทำงานเมื่อ SUP สร้าง `product_ID`) |
-| **ผู้ใช้งาน** | SUP สร้าง `product_ID`, พนักงานเช็คค่าที่หน้า `/finish-good1/:user` |
+| | |
+|---|---|
+| **Data entry page** | `/finish-good1/:user` |
+| **Layout** | 1 Batch = 1 row |
+| **Rows created by** | Automation **SaveBatch**, when the SUP creates the `product_ID` |
+| **Users** | SUP creates the `product_ID`; operators enter the check values |
 
----
+## Why rows instead of columns
 
-## 📌 ทำไมต้องเก็บเป็นแถว (row) ไม่ใช่คอลัมน์
+When milk starts feeding the machine, the operator samples it for testing. How many Batches one
+check covers isn't fixed:
 
-เมื่อเริ่มดึงนมเข้าเครื่อง พนักงานจะเก็บตัวอย่างนมมาเช็คค่า
+- **Continuous feed** — several consecutive Batches can be checked in one test cycle.
+- **Emergency machine stop** — the Batch must restart its milk feed and be checked again.
 
-- **ดึงต่อเนื่อง:** batch ถัดไปที่ดึงต่อเนื่องกัน สามารถเช็ครอบเดียวได้เลย
-- **เกิดเหตุฉุกเฉินต้องหยุดเครื่อง:** batch นั้นต้องเริ่มดึงนมใหม่และเช็คค่าใหม่
+A fixed set of `Batch1…BatchN` columns can't handle that, so Finish-good moved from columns
+(the old design) to **one row per Batch**.
 
-เพราะเหตุการณ์ข้างต้น **จำนวน batch ต่อการเช็คหนึ่งครั้งไม่แน่นอน** จึงไม่สามารถกำหนดจำนวน batch ตายตัวเป็นคอลัมน์ได้
+## SaveBatch
 
-ดังนั้น ระบบจึงเก็บแบบ **1 batch = 1 แถว** แทน  
-> เดิมเก็บเป็นคอลัมน์
+Runs when the SUP creates a `product_ID`. It reads `Batch1`–`Batch11` from the trigger,
+**skips empty Batches**, and creates one Finish-good row per Batch with:
 
----
+| Field | Meaning |
+|---|---|
+| `Group` | Machine group (MC) |
+| `Flavor` | Flavor of that Batch |
+| `Batch` | Batch number |
+| `Product_ID` | Built from the production date, week, day, loop and group — format in [prp3-table.md](prp3-table.md#product_id) |
 
-## ⚙️ Automation: `SaveBatch`
-
-ทำงานเมื่อ SUP สร้าง `product_ID` โดยวนลูปสร้างแถวในตาราง **Finish-good** ให้ทุก batch ที่มีการกรอก  
-(ตรวจ `Batch1`–`Batch11` และตัดช่วงที่ว่างออก)
-
-| ฟิลด์ที่ได้ | ความหมาย |
-|:---|:---|
-| `Group` | กลุ่ม/เครื่อง (MC) |
-| `Flavor` | รสชาติของ batch นั้น |
-| `Batch` | เลข batch |
-| `Product_ID` | รหัสผลิตภัณฑ์ที่สร้างจากวันที่ผลิตและรอบการผลิต |
-
----
-
-## 🆔 รูปแบบ `Product_ID`
-
-```text
-{ปี 2 หลัก}{เดือน}{วัน}-{Week}{ตัวย่อวัน}{Loop}-{Group}
-```
-
-### ตัวอย่าง
-
-```text
-260106-41Tu1-A
-```
-
-> วันที่ 6 ม.ค. 2026, Week 41, วันอังคาร, Loop 1, Group A
-
-### ตัวย่อวัน
-
-| วัน | ตัวย่อ |
-|:---|:---:|
-| อาทิตย์ | `Su` |
-| จันทร์ | `Mo` |
-| อังคาร | `Tu` |
-| พุธ | `We` |
-| พฤหัสบดี | `Th` |
-| ศุกร์ | `Fr` |
-| เสาร์ | `Sa` |
-
----
-
-## 💻 สคริปต์
+### Script
 
 ```javascript
 let dateTimeString = $("trigger.fields.Product Date");
@@ -99,11 +66,12 @@ return [
 ].filter(item => item.Batch && item.Batch.toString().trim() !== "");
 ```
 
----
+> ℹ️ The script reads up to **11** Batches, while `Prp 3 table` holds 8 (`Batch1`–`Batch8`).
 
-## 🚨 กรณีฉุกเฉิน: ต้องหยุดเครื่องและดึงนมใหม่
+## Emergency: machine stop and milk-feed restart
 
-เมื่อต้องเริ่มดึงนมใหม่ **พนักงานต้องสร้าง `product_ID` ใหม่เอง** โดยเปลี่ยนค่า **no** จาก `1` เป็น `2`
+If the milk feed has to restart, the **operator creates a new `product_ID` by hand**, changing the
+number (`no`) from `1` to `2`, then enters the data on `/finish-good1/:user`.
 
 จากนั้นบันทึกข้อมูลที่หน้า:
 
