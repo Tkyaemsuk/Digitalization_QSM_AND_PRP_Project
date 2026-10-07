@@ -1,194 +1,61 @@
-# ⚠️ ภาพรวมของปัญหา
+# PRP3 — Known issues and improvement ideas
 
-จากการออกแบบระบบปัจจุบัน พบประเด็นที่อาจส่งผลต่อการรองรับการผลิตและการเพิ่ม Product ในอนาคต ดังนี้
+[← PRP3 overview](README.md)
 
----
+| # | Issue | Why it hurts | Proposed fix | Status |
+|---|---|---|---|---|
+| 1 | Stage data stored in numbered columns | Every extra Batch needs new columns | Row-based storage | Open |
+| 2 | Products need different fields | Each new product may need new input pages | One structure sized for the largest product; unused fields = `0` | Open |
+| 3 | Finish-good stored Batches as columns | Re-checks and extra Batches don't fit | One row per Batch | ✅ Done — see [finish-good.md](finish-good.md) |
 
-## 1. การจัดเก็บข้อมูลการผลิตเป็น Column
+## 1. Stage data is stored in columns
 
-ปัจจุบันข้อมูลในกระบวนการผลิต เช่น
+Thermised, Blending, After Past and Standardized data is stored with one column per Batch:
 
-* `Thermised`
-* `Blending`
-* `After Past`
-* `Standardized`
-
-ถูกจัดเก็บในรูปแบบ **Column** โดยข้อมูลของแต่ละ Batch จะถูกกำหนดไว้ในโครงสร้างตาราง
-
-การออกแบบลักษณะนี้อาจมีข้อจำกัดเมื่อกำลังการผลิตเพิ่มขึ้น เช่น หากในอนาคตมีการผลิต **10 Batch หรือมากกว่า** อาจจำเป็นต้องเพิ่ม Column สำหรับรองรับ Batch ใหม่ ทำให้โครงสร้าง Database มีขนาดใหญ่ขึ้นและแก้ไขได้ยาก
-
-### แนวทางการปรับปรุง
-
-พิจารณาปรับรูปแบบการจัดเก็บจาก **Column-Based** เป็น **Row-Based**
-
-ตัวอย่างแนวคิด
-
-```text
-Current
-
-Thermised_1
-Thermised_2
-Thermised_3
-...
-Thermised_10
-
-Blending_1
-Blending_2
-Blending_3
-...
-Blending_10
+```
+Current                        Proposed
+Thermised_1 … Thermised_10     Process     Batch   Value
+Blending_1  … Blending_10      Thermised   1       …
+                               Thermised   2       …
+                               Blending    1       …
 ```
 
-เป็น
+If production grows to 10+ Batches per run, the columnar design needs new columns — and new
+input-page fields — every time. A **row per Batch per process** has no upper limit and doesn't
+change the table structure as volumes grow. (`Yield2` already exists because `Yield` ran out of
+columns.)
 
-```text
-Proccess      Batch
-Thermised     1
-Thermised     2
-Thermised     3
-...
-Thermised     10
+## 2. Adding new products
 
-Blending      1
-Blending      2
-Blending      3
-...
-Blending      10
+Products go through different stages:
+
+```
+Product A: Thermised → Blending → After Past → Standardized
+Product B: Thermised → Blending → Standardized
 ```
 
-การจัดเก็บแบบ Row จะช่วยลดการกำหนดจำนวน Batch ไว้ล่วงหน้า และสามารถรองรับจำนวน Batch ที่เพิ่มขึ้นในอนาคตได้ยืดหยุ่นมากขึ้น
+Building separate input pages per product means every new product needs new pages.
 
----
+**Proposal:** design one structure around the product with the **most** stages and set unused
+values to `0`:
 
-## 2. การเพิ่ม Product ใหม่
+| Stage | Product A | Product B |
+|---|---|---|
+| Thermised | 100 | 100 |
+| Blending | 200 | 200 |
+| After Past | 150 | **0** |
+| Standardized | 180 | 180 |
 
-Product แต่ละชนิดอาจมีข้อมูลและขั้นตอนการผลิตที่แตกต่างกัน ทำให้ข้อมูลที่ต้องบันทึกในแต่ละ Product ไม่เหมือนกัน
+All products then share the same tables and pages.
 
-ตัวอย่างเช่น
+## 3. Finish-good Batches as columns — done
 
-```text
-Product A
-├── Thermised
-├── Blending
-├── After Past
-└── Standardized
+The number of Batches that need checking can't be known in advance (a quality issue can require
+another sample), so a `Product_ID | Batch_1 | … | Batch_10` layout always hits its limit.
+Finish-good now stores **one row per Batch** (`Product_ID | Batch`), and a re-check is simply a
+new row. See [finish-good.md](finish-good.md#why-rows-instead-of-columns).
 
-Product B
-├── Thermised
-├── Blending
-└── Standardized
-```
+## Summary
 
-หากออกแบบหน้า Input แยกตามข้อมูลของแต่ละ Product เมื่อมีการเพิ่ม Product ใหม่ อาจทำให้ต้องสร้างหรือแก้ไขหน้า Input เพิ่มขึ้นตามลักษณะข้อมูลของ Product นั้น
-
-### แนวทางการปรับปรุง
-
-ควรพิจารณาออกแบบโครงสร้างโดยอ้างอิงจาก **ชุดข้อมูลที่มีมากที่สุด**
-
-Product ที่ไม่มีข้อมูลหรือขั้นตอนบางรายการ สามารถกำหนดค่าเป็น `0` เพื่อให้สามารถใช้โครงสร้างและหน้า Input ร่วมกันได้
-
-ตัวอย่าง
-
-```text
-Product A
-Thermised      = 100
-Blending       = 200
-After Past     = 150
-Standardized   = 180
-
-Product B
-Thermised      = 100
-Blending       = 200
-After Past     = 0
-Standardized   = 180
-```
-
-แนวทางนี้ช่วยลดความจำเป็นในการสร้างหน้า Input ใหม่สำหรับ Product แต่ละชนิด
-
----
-
-# 🥛 3. ตาราง Finish-good
-
-อีกหนึ่งข้อจำกัดคือการจัดเก็บข้อมูลในตาราง **Finish-good** โดยเฉพาะกรณีที่จำนวน Batch ที่ต้องตรวจสอบไม่สามารถกำหนดจำนวนสูงสุดได้แน่นอน
-
-ในกระบวนการผลิตอาจเกิดกรณีที่ต้องนำผลิตภัณฑ์กลับมาตรวจสอบใหม่ เช่น เมื่อเกิดปัญหาด้านคุณภาพ จำเป็นต้องเก็บตัวอย่างนมกลับมาเพื่อตรวจสอบเพิ่มเติม
-
-ดังนั้นจึงไม่สามารถกำหนดได้แน่นอนว่ากระบวนการหนึ่งจะมีจำนวน Batch ที่ต้องตรวจสอบเพียงเท่าใด
-
-หากออกแบบตารางแบบ Column เช่น
-
-```text
-Batch_1
-Batch_2
-Batch_3
-...
-Batch_10
-```
-
-ระบบจะถูกจำกัดด้วยจำนวน Column ที่กำหนดไว้ หากในอนาคตมี Batch มากกว่าจำนวนที่ออกแบบไว้ จะต้องแก้ไขโครงสร้าง Database และหน้า Input เพิ่มเติม
-
-### แนวทางการปรับปรุง
-
-พิจารณาปรับการจัดเก็บข้อมูล **Finish-good จาก Column-Based เป็น Row-Based**
-
-ตัวอย่าง
-
-```text
-Current
-
-Product_ID | Batch_1 | Batch_2 | Batch_3 | ... | Batch_10
-```
-
-ปรับเป็น
-
-```text
-Product_ID | Batch
------------|------
-Product A  | 1
-Product A  | 2
-Product A  | 3
-Product A  | 4
-...
-```
-
-เมื่อใช้ Row-Based ระบบจะไม่จำเป็นต้องกำหนดจำนวน Batch สูงสุดไว้ในโครงสร้าง Table
-
-หากเกิดกรณีต้องตรวจสอบผลิตภัณฑ์เพิ่มเติม สามารถเพิ่ม Row ใหม่ได้ทันที โดยไม่ต้องเพิ่ม Column หรือแก้ไขโครงสร้าง Database
-
----
-
-# 🎯 สรุปปัญหาและแนวทาง
-
-| ปัญหา                                                               | ข้อจำกัด                                      | แนวทาง                                                        |
-| ------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------- |
-| ข้อมูล Thermised / Blending / After Past / Standardized เป็น Column | เมื่อ Batch เพิ่มขึ้นต้องเพิ่ม Column         | พิจารณาใช้ Row-Based                                          |
-| Product แต่ละชนิดมีข้อมูลไม่เหมือนกัน                               | อาจต้องสร้างหน้า Input แยก                    | ออกแบบจากข้อมูลที่มีมากที่สุด และใช้ `0` สำหรับข้อมูลที่ไม่มี |
-| Finish-good กำหนดจำนวน Batch ได้จำกัด                               | ไม่สามารถรองรับ Batch ที่เพิ่มขึ้นได้ยืดหยุ่น | เปลี่ยนเป็น Row-Based                                         |
-| ต้องตรวจสอบนมเพิ่มเติม                                              | จำนวนข้อมูลที่ต้องเก็บไม่แน่นอน               | เพิ่ม Row ใหม่แทนการเพิ่ม Column                              |
-
-### แนวคิดหลัก
-
-```text
-                    Current System
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-    Batch จำกัด     Product ต่างกัน   Finish-good
-          │              │              │
-          ▼              ▼              ▼
-    เพิ่ม Column     เพิ่มหน้า Input   เพิ่ม Column
-          │              │              │
-          └──────────────┼──────────────┘
-                         ▼
-                 Future Improvement
-                         │
-                         ▼
-                  Row-Based Design
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-     เพิ่ม Batch     รองรับ Product   เพิ่มข้อมูล
-     ได้ยืดหยุ่น       ได้ง่ายขึ้น      ได้ไม่จำกัด Column
-```
-
-> **หมายเหตุ:** การปรับเป็น Row-Based เป็นแนวทางที่ควรพิจารณาสำหรับการรองรับการขยายตัวของระบบในอนาคต โดยเฉพาะกรณีที่จำนวน Batch และข้อมูลที่ต้องตรวจสอบไม่สามารถกำหนดจำนวนที่แน่นอนได้
+Wherever the number of Batches or checks can't be fixed in advance, **use rows, not columns**.
+That covers more Batches, new products and extra checks without changing the database structure.
