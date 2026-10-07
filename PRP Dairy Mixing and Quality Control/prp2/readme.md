@@ -16,11 +16,11 @@
 
 ระบบ PRP2 มีผู้ใช้งานหลัก 3 กลุ่ม
 
-| User | Responsibility |
-|---|---|
-| **SUP** | สร้าง `Product_ID` และดำเนินการในส่วนที่ต้องใช้สิทธิ์ SUP |
-| **Control** | กรอกและตรวจสอบข้อมูลด้าน Control และข้อมูลที่เกี่ยวข้องกับ Mixing |
-| **Operator** | กรอกข้อมูลการผลิตและข้อมูลที่เกิดขึ้นในแต่ละกระบวนการ |
+| User         | Responsibility                                                    |
+| ------------ | ----------------------------------------------------------------- |
+| **SUP**      | สร้าง `Product_ID` และดำเนินการในส่วนที่ต้องใช้สิทธิ์ SUP         |
+| **Control**  | กรอกและตรวจสอบข้อมูลด้าน Control และข้อมูลที่เกี่ยวข้องกับ Mixing |
+| **Operator** | กรอกข้อมูลการผลิตและข้อมูลที่เกิดขึ้นในแต่ละกระบวนการ             |
 
 สิทธิ์การเข้าถึงและการแก้ไขข้อมูลของแต่ละหน้าจะขึ้นอยู่กับหน้าที่ของผู้ใช้งาน
 
@@ -36,22 +36,22 @@ flowchart TD
     A -->|"Automation: Save Row"| Y[("Yield_prp2<br/>1 row / Batch")]
     A -->|"Automation: Save Row"| FG[("Finish-good<br/>1 row / Batch")]
 
-    Y -->|"Buffer Lab / Buffer Control"| S[("PRP_Spec<br/>Source / Flavor")]
-    Y -->|"ข้อมูลส่วนผสมที่ผสมเป็น Buffer"| M["/mixing_table/:user control สร้าง Date_ID "]
+    Y -->|"Spec Check"| S[("PRP_Spec<br/>Source / Flavor")]
+    Y -->|"ข้อมูลส่วนผสมที่ผสมเป็น Buffer"| M["/mixing_table/:user<br/>Control สร้าง Date_ID"]
 
     M -->|"Control สร้าง Date_ID"| MT[("Mixing_prp2<br/>1 row / 5 Batch")]
     M -->|"Control สร้าง Date_ID"| CM[("Control_Mixing<br/>1 row / 5 Batch")]
     M -->|"Control สร้าง Date_ID"| RL[("Recombine_labprp2<br/>1 row / 6 Batch")]
+```
 
-    S -.->|"Spec Check"| Y
 **1. Create Tag**
 
 SUP สร้าง `Product_ID` ผ่าน `/create-tag-plant2`
 
 เมื่อสร้าง `Product_ID` ระบบจะใช้ Automation สร้าง Row สำหรับ Product และ Batch ที่เกี่ยวข้องให้อัตโนมัติใน
 
-- `Yield_prp2` — 1 row / Batch
-- `Finish-good` — 1 row / Batch
+* `Yield_prp2` — 1 row / Batch
+* `Finish-good` — 1 row / Batch
 
 **2. Production**
 
@@ -63,7 +63,7 @@ SUP สร้าง `Product_ID` ผ่าน `/create-tag-plant2`
 
 **4. Mixing**
 
-ข้อมูลส่วนผสมจะถูกจัดการในส่วน Mixing โดยแบ่งออกเป็น 6 Groups ได้แก่ `F`, `G`, `H`, `I`, `J` และ `K`
+ข้อมูลส่วนผสมจะถูกจัดการในส่วน Mixing โดยแบ่งออกเป็น 6 Groups ได้แก่ `F`, `G`, `H`, `I`, `J`, และ `K`
 
 Control เป็นผู้สร้าง `Date_ID` เพื่อใช้เป็นข้อมูลอ้างอิงของข้อมูล Mixing
 
@@ -71,9 +71,9 @@ Control เป็นผู้สร้าง `Date_ID` เพื่อใช้�
 
 ข้อมูลจาก Mixing จะถูกจัดเก็บตามกระบวนการที่เกี่ยวข้อง ได้แก่
 
-- `Mixing_prp2` — 1 row / 5 Batch
-- `Control_Mixing` — 1 row / 5 Batch
-- `Recombine_labprp2` — 1 row / 6 Batch
+* `Mixing_prp2` — 1 row / 5 Batch
+* `Control_Mixing` — 1 row / 5 Batch
+* `Recombine_labprp2` — 1 row / 6 Batch
 
 **6. Finish-good**
 
@@ -83,12 +83,12 @@ Control เป็นผู้สร้าง `Date_ID` เพื่อใช้�
 
 # 🗄️ Database
 
-| Table | รายละเอียด |
-|---|---|
-| `prp_2_table` | เก็บข้อมูลหลักของ Product ได้แก่ `Product_ID`, `Flavor`, `Batch`, `Size` |
-| `Yield_prp2` | เก็บข้อมูลการผลิตของ PRP2 รวมถึง Buffer Lab และ Buffer Control |
-| `Recombine_labprp2` | เก็บข้อมูล LAB และ Control ของการผสมนม Recombine |
-| `Mixing_prp2` | เก็บข้อมูลส่วนผสมอื่น ๆ ของ LAB |
-| `Control_Mixing` | เก็บข้อมูลส่วนผสมอื่น ๆ ของ Control |
-| `Finish-good` | เก็บข้อมูลนมที่ผ่านกระบวนการฆ่าเชื้อแล้ว |
-| `PRP_Spec` | ใช้เก็บและตรวจสอบค่า Specification ของผลิตภัณฑ์ |
+| Table               | รายละเอียด                                                               |
+| ------------------- | ------------------------------------------------------------------------ |
+| `prp_2_table`       | เก็บข้อมูลหลักของ Product ได้แก่ `Product_ID`, `Flavor`, `Batch`, `Size` |
+| `Yield_prp2`        | เก็บข้อมูลการผลิตของ PRP2 รวมถึง Buffer Lab และ Buffer Control           |
+| `Recombine_labprp2` | เก็บข้อมูล LAB และ Control ของการผสมนม Recombine                         |
+| `Mixing_prp2`       | เก็บข้อมูลส่วนผสมอื่น ๆ ของ LAB                                          |
+| `Control_Mixing`    | เก็บข้อมูลส่วนผสมอื่น ๆ ของ Control                                      |
+| `Finish-good`       | เก็บข้อมูลนมที่ผ่านกระบวนการฆ่าเชื้อแล้ว                                 |
+| `PRP_Spec`          | ใช้เก็บและตรวจสอบค่า Specification ของผลิตภัณฑ์                          |
