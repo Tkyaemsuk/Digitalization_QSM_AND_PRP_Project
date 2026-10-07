@@ -1,51 +1,47 @@
-# PRP 3: Prp 3 table
+# PRP3 — `Prp 3 table`
 
-**แอปพลิเคชัน:** PRP Dairy Mixing and Quality Control  
-**แผนก:** PRP 3 (การผลิตนมสด, นมเปรี้ยว, ชา, กาแฟ และน้ำผลไม้)
+[← PRP3 overview](README.md)
 
----
+`Prp 3 table` holds the core data of each production run in PRP3 — and of **PRP1 Fresh Milk**,
+which uses the same process. It is filled from the Create Tag page and updated again when the
+Standardized stage is saved.
 
-## 📌 1. วัตถุประสงค์ของระบบ (Overview)
+## Fields
 
-หน้าจอและตาราง `Prp 3 table` จัดทำขึ้นเพื่อบันทึกและจัดการข้อมูลทางห้องปฏิบัติการ (Lab) รวมถึงข้อมูลการผลิตของแผนก **PRP 3** ซึ่งครอบคลุมประเภทผลิตภัณฑ์ที่หลากหลาย เช่น นมสด, นมเปรี้ยว, ชา, กาแฟ และน้ำผลไม้
+| Field | Type | Description |
+|---|---|---|
+| `product_ID` | String | Run identifier, e.g. `120226-1Fr2-M` — see [format](#product_id) |
+| `Flavor1` – `Flavor8` | Text | Flavor of each Batch |
+| `Batch1` – `Batch8` | Number / String | Batch numbers — up to **8 Batches per loop** |
+| `Size1` – `Size8` | Float (tons) | Size of each Batch, in **tons** |
+| Yield / Finish-good | Record | Yield summary and finished-product data recorded after production |
 
-ระบบจะทำการบันทึกข้อมูลเชื่อมโยงตั้งแต่กระบวนการสร้างรหัสผลิตภัณฑ์ (`product_ID`) จนถึงขั้นตอนการบันทึกผลผลิต (Yield & Finish-good)
+Batches are stored as **numbered columns**, which caps a run at 8 Batches — see
+[problems.md](problems.md#1-stage-data-is-stored-in-columns).
 
----
+## Product_ID
 
-## 🏭 2. ข้อมูลเบื้องต้นของแผนก PRP 3
+Generated automatically from the date, week, day of week, loop and group:
 
-แผนก PRP 3 แบ่งสายการผลิตออกเป็น **2 กลุ่มหลัก (Groups)** ดังนี้:
+```
+{YY}{MM}{DD}-{Week}{Day}{Loop}-{Group}
+```
 
-* **M Group:** สายการผลิตนมสด
-* **L Group:** สายการผลิตนมเปรี้ยว, ชา, กาแฟ และนมถั่วเหลือง
+| Example | Meaning |
+|---|---|
+| `260106-41Tu1-A` | 6 Jan 2026, week 41, Tuesday, loop 1, group A |
 
----
+Day codes: `Su` `Mo` `Tu` `We` `Th` `Fr` `Sa`. This is the format produced by the
+[SaveBatch script](finish-good.md#script).
 
-## 🔑 3. กฎการสร้างรหัสผลิตภัณฑ์ (`product_ID`)
+> ⚠️ **To verify:** the original docs give `120226-1Fr2-M` as the PRP3 example and describe the
+> format as *Product + Date + Group + Week + Loop*, which does not match the script's
+> `YYMMDD-…` order. PRP1 Soy Milk uses `DDMMYY` (`300726-31Th1`). Check which order the live app
+> produces before relying on either.
 
-ระบบจะสร้างรหัส `product_ID` โดยอัตโนมัติจากการประสมประสานของข้อมูลต่างๆ เข้าด้วยกัน ดังรูปแบบตัวอย่าง:
+## Create Tag page — `/create-tag/:user`
 
-> **รูปแบบ:** `Product` + `Date` + `Group` + `week` + `loop`  
-> **ตัวอย่าง:** `120226-1Fr2-M`
-
----
-
-## 📋 4. รายละเอียดข้อมูลในตาราง `Prp 3 table`
-
-ตารางนี้ทำหน้าที่จัดเก็บข้อมูลสำคัญเกี่ยวกับการผลิตและการควบคุมคุณภาพ โดยมีรายละเอียดโครงสร้างฟิลด์ข้อมูลดังนี้:
-
-| ลำดับ | Field | ประเภทข้อมูล / รูปแบบ | รายละเอียดคำอธิบาย |
-| :---: | :--- | :--- | :--- |
-| **1** | `product_ID` | String | รหัสผลิตภัณฑ์ที่สร้างจากเงื่อนไข เช่น `120226-1Fr2-M` |
-| **2** | `Flavor1` - `Flavor8` | String / Text | รายละเอียดรสชาติของสินค้าในแต่ละ Batch |
-| **3** | `Batch1` - `Batch8` | Number / String | หมายเลข Batch การผลิต (รองรับสูงสุด 8 Batch ต่อ 1 Loop) |
-| **4** | `Size1` - `Size8` | Float (ตัน) | ขนาดหรือปริมาณการผลิตของแต่ละ Batch มีหน่วยเป็น **ตัน** |
-| **5** | `Yield / Finish-good` | Data Record | ข้อมูลสรุปผลผลิตและสินค้าสำเร็จรูปที่บันทึกหลังผ่านกระบวนการผลิต |
-
----
-
-## 🔐 5. การจัดการสิทธิ์การใช้งานหน้าจอ (`/create-tag/:user`)
-
-* **ข้อจำกัดการมองเห็น:** สำหรับหน้าจอจัดการสร้างแท็ก `/create-tag/:user` ผู้ใช้งานจะมองเห็นและเข้าถึงเฉพาะ **รหัสผู้ควบคุม (sup)** ของตนเองเท่านั้น
-* **การบันทึกข้อมูล:** เมื่อทำการสร้างและยืนยันข้อมูลเรียบร้อยแล้ว ระบบจะทำการบันทึกข้อมูลทั้งหมดลงในตาราง **`Prp 3 table`** โดยอัตโนมัติเพื่อใช้ติดตามสถานะ (Yield & Finish-good) ต่อไป
+- Used by the **SUP** to create the `Product_ID`, flavors, batches and sizes for a run.
+- Each SUP **sees only their own supervisor code**.
+- On confirm, everything is saved to `Prp 3 table`, and a matching row is created in `Yield` /
+  `Yield2` and in `Finish-good` so the run can be tracked through every stage.
