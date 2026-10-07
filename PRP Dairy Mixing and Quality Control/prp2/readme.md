@@ -37,7 +37,7 @@ flowchart TD
     A -->|"Automation: Save Row"| FG[("Finish-good<br/>1 row / Batch")]
 
     Y -->|"Buffer Lab / Buffer Control"| S[("PRP_Spec<br/>Source / Flavor")]
-    Y -->|"ข้อมูลส่วนผสมที่ผสมเป็น Buffer"| M["Mixing / User Control"]
+    Y -->|"ข้อมูลส่วนผสมที่ผสมเป็น Buffer"| M["/mixing_table/:user control สร้าง Date_ID "]
 
     M -->|"Control สร้าง Date_ID"| MT[("Mixing_prp2<br/>1 row / 5 Batch")]
     M -->|"Control สร้าง Date_ID"| CM[("Control_Mixing<br/>1 row / 5 Batch")]
