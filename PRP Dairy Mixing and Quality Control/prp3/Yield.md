@@ -1,216 +1,99 @@
-# 🏭 ระบบบันทึกข้อมูลการผลิต Yield
-### PRP Production Data Entry
+# PRP3 — Yield: production stage pages
 
-> ระบบสำหรับบันทึกข้อมูลในแต่ละขั้นตอนการผลิต  
-> **Thermised → Blending → After Past / After Cooling → Standardized / Standardization**
+[← PRP3 overview](README.md)
 
-รองรับผลิตภัณฑ์ **4 ประเภท** ซึ่งแต่ละประเภทมีค่าที่ต้องเก็บไม่เหมือนกัน
+The Yield pages record each production stage for every Batch:
 
----
+**Thermised → Blending → After Past / After cooling → Standardized / Standardization**
 
-## 📑 สารบัญ
+- [Products and tables](#products-and-tables)
+- [Stage pages](#stage-pages)
+- [Spec check (`CheckSpecPrp`)](#spec-check-checkspecprp)
+- [BOM and `buffer_vol` formulas](#bom-and-buffer_vol-formulas)
+- [Permissions](#permissions)
+- [URL parameters](#url-parameters)
 
-- [📌 ภาพรวม](#-ภาพรวม)
-- [🥛 ประเภทผลิตภัณฑ์](#-ประเภทผลิตภัณฑ์)
-- [🔄 ลำดับการทำงาน](#-ลำดับการทำงาน)
-- [📋 รายละเอียดแต่ละหน้า](#-รายละเอียดแต่ละหน้า)
-- [🗄️ ฐานข้อมูล](#️-ฐานข้อมูล)
-- [🧮 คิวรีและสูตรคำนวณ](#-คิวรีและสูตรคำนวณ)
-- [👤 สิทธิ์การใช้งาน](#-สิทธิ์การใช้งาน)
-- [🔗 พารามิเตอร์ใน-URL](#-พารามิเตอร์ใน-url)
+## Flow
 
----
+1. The **SUP** creates the `product_ID` on `/create-tag/:user` ([details](prp3-table.md#create-tag-page--create-taguser)).
+2. The system creates a matching row in **`Yield`** — or in **`Yield2`** for Fermented Milk.
+3. **Operators** enter data on `/inputdata`, `/blending`, `/buffer` and `/buffer2`.
+4. On **Save**, the data is written to `Yield` / `Yield2`; Standardized also writes to **`Prp 3 table`**.
 
-# 📌 ภาพรวม
+## Products and tables
 
-### 🔹 Workflow หลัก
+Each product needs different fields, so every page shows the form for the product of the
+current `product_ID` (conditional display).
 
-| ขั้นตอน | รายละเอียด |
-|:---:|---|
-| **1** | **SUP** สร้าง `product_ID` ที่หน้า `/create-tag/:user` |
-| **2** | ระบบนำ `product_ID` ไปสร้างแถวข้อมูลในตาราง **Yield** |
-| **3** | สำหรับ **นมเปรี้ยว** จะสร้างข้อมูลใน **Yield2** |
-| **4** | พนักงานบันทึกข้อมูลตามขั้นตอน `/inputdata`, `/blending`, `/buffer`, `/buffer2` |
-| **5** | เมื่อกดบันทึก ข้อมูลจะถูกเขียนลง **Yield / Yield2** และ **prp3 table** |
+| Product | Stored in |
+|---|---|
+| Demol Milk | `Yield` |
+| Soy Milk | `Yield` |
+| Tea | `Yield` |
+| Fermented Milk | `Yield2` |
 
----
+> `Yield` ran out of columns, so `Yield2` was added for Fermented Milk. Creating a Fermented Milk
+> `product_ID` automatically creates its row in `Yield2`.
 
-# 🥛 ประเภทผลิตภัณฑ์
+## Stage pages
 
-เนื่องจากผลิตภัณฑ์แต่ละตัวมีค่าที่ต้องเก็บต่างกัน แต่ละหน้าจึงแสดงฟอร์มตามชื่อ product **(conditional display)**
+| # | Stage | Route | Records |
+|---|---|---|---|
+| 1 | **Thermised** | `/inputdata/:a/:b/:user` | Quality check from PRP2 |
+| 2 | **Blending** | `/blending/:a/:b/:user` | Check when receiving milk into the tank car |
+| 3 | **After Past / After cooling** | `/buffer/:a/:b/:user` | After pasteurization / cooling |
+| 4 | **Standardized / Standardization** | `/buffer2/:a/:b/:user` | Final standardization + SUP sign-off |
 
-| ผลิตภัณฑ์ | ตารางที่เก็บข้อมูล |
-|:---:|:---:|
-| 🥛 นมดีมอล์ | `Yield` |
-| 🫘 นมถั่วเหลือง | `Yield` |
-| 🍵 ชา | `Yield` |
-| 🥣 นมเปรี้ยว | `Yield2` |
+### Behaviour shared by all stage pages
 
-> 💡 **หมายเหตุ:** ตาราง `Yield` เก็บข้อมูลเต็มแล้ว จึงเพิ่มตาราง **Yield2** เพื่อเก็บข้อมูลนมเปรี้ยวโดยเฉพาะ เมื่อ SUP สร้าง `product_ID` ของนมเปรี้ยว ระบบจะสร้างแถวข้อมูลใน `Yield2` ให้อัตโนมัติ
+- Shows **8 Batches** in order; the SUP can renumber, add or delete Batches.
+- Data can be **edited at any time**, but the operator's **employee ID can be saved only once**.
+- JavaScript checks that every required field is filled — **incomplete data cannot be saved**.
+- A successfully saved Batch **turns green**.
+- Values are validated against [`PRP_Spec`](#spec-check-checkspecprp).
 
----
+### Page-specific details
 
-## 🔄 Production Workflow
+**Thermised** — also has a pop-up for entering **water pH**.
 
-```mermaid
-flowchart TD
-    A["🏷️ Create Tag<br/>/create-tag/:user<br/>SUP creates product_ID"]
-    B["🔥 Thermised<br/>/inputdata/:a/:b/:user<br/>PRP2 Quality Check"]
-    C["🥛 Blending<br/>/blending/:a/:b/:user<br/>Tank Car Receiving Check"]
-    D["❄️ After Past / After Cooling<br/>/buffer/:a/:b/:user"]
-    E["⚙️ Standardized / Standardization<br/>/buffer2/:a/:b/:user"]
+**After Past / After cooling** — the heading depends on the product:
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-```
+| Product | Heading |
+|---|---|
+| Fresh Milk | After Past |
+| Tea | After cooling |
+| Soy Milk | After cooling |
 
-# 📋 รายละเอียดแต่ละหน้า
+**Standardized / Standardization** — heading by product, plus extra features:
 
-## 1. 🏷️ `/create-tag/:user` — สร้างแท็ก
+| Product | Heading |
+|---|---|
+| Fresh Milk | Standardized |
+| Soy Milk | Standardized |
+| Tea | Standardization |
 
-- ใช้โดย **SUP**
-- สร้าง `product_ID`
-- ตาราง `Yield` และ `Yield2` จะรับค่านี้ไปใช้ในหน้าลงข้อมูลทุกหน้า
+- SUP verification / sign-off field
+- Calculates **BOM volume** and **`buffer_vol`** ([formulas](#bom-and-buffer_vol-formulas))
+- Save writes to both **`Yield`** and **`Prp 3 table`**
 
----
+## Spec check (`CheckSpecPrp`)
 
-## 2. 🔥 `/inputdata/:a/:b/:user` — Thermised
-
-เก็บข้อมูลที่เช็คมาจาก **prp2**
-
-### ผลิตภัณฑ์
-
-- นมดีมอล์
-- นมถั่วเหลือง
-- ชา
-- นมเปรี้ยว
-
-### การทำงาน
-
-- แสดงฟอร์มตามชื่อ product
-- เมื่อเข้าหน้านี้ จะเห็น **8 batch** เรียงลงมา
-- มีโมเดล (modal) สำหรับกรอก **pH น้ำ**
-- **SUP** สามารถเปลี่ยนเลข batch, ลบ หรือเพิ่ม batch ได้
-- สามารถแก้ไขข้อมูลได้ตลอดเวลา
-- **รหัสพนักงาน** บันทึกได้ **ครั้งเดียว** เท่านั้น
-- มี JavaScript ตรวจสอบความครบถ้วน
-- หากช่องใดกรอกไม่ครบ **จะไม่สามารถบันทึกได้**
-- เมื่อบันทึกสำเร็จ **พื้นหลังของ batch เปลี่ยนเป็นสีเขียว**
-- มีการ **เช็คค่า Spec** โดยดึงจากตาราง `PRP_Spec`
-
-ดูรายละเอียดที่ [CheckSpecPrp](#checkspecprp)
-
----
-
-## 3. 🥛 `/blending/:a/:b/:user` — Blending
-
-เก็บข้อมูลที่เช็คตอน **รับนมเข้า tank car**
-
-### ผลิตภัณฑ์
-
-- นมดีมอล์
-- นมถั่วเหลือง
-- ชา
-- นมเปรี้ยว
-
-### การทำงาน
-
-การทำงานเหมือนหน้า Thermised ทุกประการ
-
-- 8 batch
-- สิทธิ์ SUP
-- รหัสพนักงานบันทึกครั้งเดียว
-- ตรวจความครบถ้วน
-- พื้นหลังสีเขียวเมื่อบันทึก
-
----
-
-## 4. ❄️ `/buffer/:a/:b/:user` — After Past / After cooling
-
-ชื่อหัวข้อที่แสดงขึ้นกับผลิตภัณฑ์
-
-| ผลิตภัณฑ์ | ชื่อที่แสดง |
-|:---:|:---:|
-| นมสด | **After Past** |
-| ชา | **After cooling** |
-| นมถั่วเหลือง | **After cooling** |
-
----
-
-## 5. ⚙️ `/buffer2/:a/:b/:user` — Standardized / Standardization
-
-ชื่อหัวข้อที่แสดงขึ้นกับผลิตภัณฑ์
-
-| ผลิตภัณฑ์ | ชื่อที่แสดง |
-|:---:|:---:|
-| นมสด | **Standardized** |
-| นมถั่วเหลือง | **Standardized** |
-| ชา | **Standardization** |
-
-### ฟีเจอร์เพิ่มเติม
-
-- มีช่องให้ **SUP ลงชื่อตรวจสอบ**
-- มีการคำนวณ **BOM**
-- มีการคำนวณ **buffer_vol**
-- เมื่อบันทึก ข้อมูลจะถูกเขียนลงตาราง **Yield** และ **prp3 table**
-
-ดูรายละเอียดที่ [สูตรคำนวณ](#สูตรคำนวณ)
-
----
-
-# 🗄️ ฐานข้อมูล
-
-| ตาราง | หน้าที่ |
-|:---|:---|
-| `Yield` | เก็บข้อมูลการผลิตของนมดีมอล์, นมถั่วเหลือง, ชา และรับ `product_ID` จากหน้า `/create-tag/:user` |
-| `Yield2` | เก็บข้อมูลนมเปรี้ยว เนื่องจาก `Yield` เต็ม |
-| `prp3 table` | ได้รับข้อมูลเมื่อบันทึกจากหน้า Standardized / Standardization |
-| `PRP_Spec` | ตาราง Spec สำหรับตรวจสอบค่าที่กรอก |
-
----
-
-## 📊 ข้อมูลที่แต่ละหน้าเก็บ
-
-| หน้า | ข้อมูลที่เก็บ |
-|:---|:---|
-| `/inputdata/:a/:b/:user` | ข้อมูลที่เช็คจาก prp2 (Thermised) |
-| `/blending/:a/:b/:user` | ข้อมูลที่เช็คตอนรับนมเข้า tank car |
-| `/buffer/:a/:b/:user` | After Past / After cooling |
-| `/buffer2/:a/:b/:user` | Standardized / Standardization |
-
----
-
-# 🧮 คิวรีและสูตรคำนวณ
-
-## 🔍 CheckSpecPrp
-
-ใช้ตรวจสอบค่า Spec ในหน้า Thermised Blending buffer buffer2
-
-ต้องมีค่าครบทั้ง **3 ตัว**
-
-- `source`
-- `flavor`
-- `Size`
-
-จึงจะดึงค่ามาเช็คได้
+Used by all four stage pages, and by PRP1. The spec row is looked up by **milk source,
+flavor and batch size** — all three must be filled in before the check can run.
 
 ```sql
 SELECT *
 FROM PRP_Spec
 WHERE Milk_Source = {{source}}
-  AND Flavor = {{flavor}}
-  AND Batch_Size = {{Size}}
+  AND Flavor      = {{flavor}}
+  AND Batch_Size  = {{Size}}
 ```
 
----
+## BOM and `buffer_vol` formulas
 
-## 🧮 สูตรคำนวณ
+### BOM — total volume
 
-### BOM — ปริมาตรรวม
-
-นับจำนวน Flavor ที่มีค่า **Flavor1–Flavor8** แล้วคูณด้วย `BOM_Volume`
+Number of Batches that have a flavor (`Flavor1`–`Flavor8`) × `BOM_Volume`.
 
 ```javascript
 var flavors = [
@@ -225,32 +108,20 @@ var flavors = [
 ];
 
 var count = 0;
-
 for (var i = 0; i < flavors.length; i++) {
   var flavor = flavors[i];
-
   if (flavor !== null && flavor !== undefined && flavor !== "") {
     count++;
   }
 }
 
-var bomVolume =
-  parseFloat(
-    $("New Data Provider 3.Rows.0.BOM_Volume")
-  ) || 0;
-
-var total = count * bomVolume;
-
-return total;
+var bomVolume = parseFloat($("New Data Provider 3.Rows.0.BOM_Volume")) || 0;
+return count * bomVolume;
 ```
 
----
+### `buffer_vol` — total summary volume
 
-### 📦 buffer_vol — ปริมาตรรวมของ Summary
-
-รวมค่า `Summery1` ถึง `Summery8`
-
-ค่าที่ไม่ใช่ตัวเลขจะถูกนับเป็น `0`
+Sum of `Summery1`–`Summery8` (field names as spelled in the app); non-numeric values count as `0`.
 
 ```javascript
 const c =
@@ -266,33 +137,16 @@ const c =
 return c;
 ```
 
----
+## Permissions
 
-# 👤 สิทธิ์การใช้งาน
+| Role | Can |
+|---|---|
+| **SUP** | Create `product_ID` · renumber, add and delete Batches · edit data at any time · sign off Standardized |
+| **Operator** | Enter data for each Batch · save their employee ID once |
 
-| บทบาท | สิทธิ์ |
-|:---:|:---|
-| **SUP** | สร้าง `product_ID` |
-| **SUP** | เปลี่ยนเลข batch |
-| **SUP** | เพิ่ม / ลบ batch |
-| **SUP** | แก้ไขข้อมูลได้ตลอด |
-| **SUP** | ลงชื่อตรวจสอบในหน้า Standardized |
-| **พนักงาน** | กรอกข้อมูลในแต่ละ batch |
-| **พนักงาน** | รหัสพนักงานบันทึกได้ครั้งเดียว |
+## URL parameters
 
----
-
-# 🔗 พารามิเตอร์ใน URL
-
-| พารามิเตอร์ | ความหมาย |
-|:---:|:---|
-| `:user` | ผู้ใช้งานที่เข้าสู่ระบบ |
-| `:a`, `:b` | ค่าที่ส่งต่อระหว่างหน้า (ใช้อ้างอิง `product_ID` / ข้อมูลของ batch) |
-
----
-
-<div align="center">
-
-**PRP Production Data Entry**
-
-</div>
+| Parameter | Meaning |
+|---|---|
+| `:user` | Logged-in user |
+| `:a`, `:b` | Values passed between pages to identify the `product_ID` / Batch |
