@@ -61,13 +61,9 @@ SUP สร้าง `Product_ID` ผ่าน `/create-tag-plant2`
 
 ข้อมูลที่เกี่ยวข้องกับการผลิตจะถูกตรวจสอบกับ `PRP_Spec` โดยใช้ข้อมูล เช่น `Source` และ `Flavor` เพื่อค้นหา Specification ที่กำหนด
 
-**4. Mixing**
-
-ข้อมูลส่วนผสมจะถูกจัดการในส่วน Mixing โดยแบ่งออกเป็น 6 Groups ได้แก่ `F`, `G`, `H`, `I`, `J`, และ `K`
-
 Control เป็นผู้สร้าง `Date_ID` เพื่อใช้เป็นข้อมูลอ้างอิงของข้อมูล Mixing
 
-**5. Mixing Data**
+**4. Mixing Data**
 
 ข้อมูลจาก Mixing จะถูกจัดเก็บตามกระบวนการที่เกี่ยวข้อง ได้แก่
 
@@ -75,7 +71,7 @@ Control เป็นผู้สร้าง `Date_ID` เพื่อใช้�
 * `Control_Mixing` — 1 row / 5 Batch
 * `Recombine_labprp2` — 1 row / 6 Batch
 
-**6. Finish-good**
+**5. Finish-good**
 
 `Finish-good` ใช้เก็บข้อมูลนมที่ผ่านกระบวนการฆ่าเชื้อแล้ว โดยระบบเตรียม Row ตาม Batch ตั้งแต่ขั้นตอน Create Tag
 
