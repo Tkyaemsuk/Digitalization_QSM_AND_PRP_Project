@@ -1,142 +1,66 @@
-# 🏭 Project Overview — PRP1 Dairy Mixing and Quality Control
+# PRP1 — Overview
 
-## 📌 ภาพรวมโครงการ
+[← PRP overview](../README.md)
 
-**PRP1** คืออาคารการผลิตที่ 1 ซึ่งรองรับการผลิต 3 ผลิตภัณฑ์ ได้แก่
+**PRP1 is Production Building 1.** It makes three products in two areas:
 
-* 🥛 **Fresh Milk**
-* 🌱 **Soy Milk**
-* 🥛 **Fermented Milk**
+| Area | Products | Docs |
+|---|---|---|
+| **Recombine** | Fresh Milk, Fermented Milk | [fresh-milk.md](fresh-milk.md) |
+| **Blending** | Soy Milk | [soy-milk.md](soy-milk.md) |
 
-กระบวนการผลิตแบ่งออกเป็น 2 ฝั่งหลัก
+The two areas work differently. Fresh Milk follows the **same process as PRP3** and shares its
+tables; Soy Milk has its own **row-based** table and creates its `Product_ID` late.
 
-| Production Area | Product                    |
-| --------------- | -------------------------- |
-| **Blending**    | Soy Milk                   |
-| **Recombine**   | Fresh Milk, Fermented Milk |
+## Workflows
 
-ระบบ **PRP1 Dairy Mixing and Quality Control** ถูกพัฒนาขึ้นเพื่อเปลี่ยนการจัดเก็บข้อมูลการผลิตจาก **Paper-based Data** เป็น **Digital Data** โดยจัดเก็บข้อมูลใน Database เพื่อให้สามารถค้นหา ตรวจสอบ และนำข้อมูลไปใช้งานต่อได้สะดวกขึ้น
-
----
-
-## 🎯 Objectives
-
-ระบบถูกพัฒนาขึ้นเพื่อ
-
-* 📄 ลดการใช้กระดาษ
-* 🔎 เพิ่มความสะดวกในการค้นหาข้อมูล
-* 📊 ตรวจสอบข้อมูลย้อนหลังได้ง่าย
-* 💾 จัดเก็บข้อมูลใน Database
-* ⚡ ลดเวลาในการบันทึกและตรวจสอบข้อมูล
-* 🔄 รองรับการนำข้อมูลไปใช้งานในส่วนอื่น
-
----
-
-## 👥 System Users
-
-| User         | Responsibility                                           |
-| ------------ | -------------------------------------------------------- |
-| **SUP**      | สร้าง `Product_ID` และกำหนดข้อมูลที่เกี่ยวข้องกับการผลิต |
-| **Operator** | บันทึกข้อมูลการผลิตในแต่ละขั้นตอน                        |
-
----
-
-## 🔄 Production Workflow
-
-### 🥛 Fresh Milk — Recombine
-
-```text
-SUP
- │
- ▼
-Create Product_ID
- │
- ▼
-Thermised
- │
- ▼
-Recombine
- │
- ▼
-After Past
- │
- ▼
-Standardized
- │
- ▼
-Finish-good
+```mermaid
+flowchart LR
+    subgraph FM["Fresh / Fermented Milk — Recombine"]
+        direction LR
+        F1["SUP creates<br/>Product_ID"] --> F2[Thermised] --> F3[Recombine] --> F4[After Past] --> F5[Standardized] --> F6[(Finish-good)]
+    end
+    subgraph SM["Soy Milk — Blending"]
+        direction LR
+        S1["SUP creates<br/>Product_Date + Batches"] --> S2[Storage] --> S3["Blending /<br/>Before Cooling"] --> S4["After Past /<br/>After Cooling"] --> S5["Standardized<br/>+ pick Group"] --> S6["Product_ID created"] --> S7[(Finish-good)]
+    end
 ```
 
-### 🌱 Soy Milk — Blending
+| | Fresh / Fermented Milk | Soy Milk |
+|---|---|---|
+| `Product_ID` created | At the start, by the SUP | At **Standardized**, once the Group is chosen |
+| Main table | `Prp 3 table` (shared with PRP3) | `prp1_table` |
+| Layout | Columns, up to 8 Batches | **Rows** — 1 Batch = 1 row |
+| Stage tables | `prp1thermised`, `blendingprp1`, `buffer1_prp1`, `buffer2_prp1` | all in `prp1_table` |
+| Batches created by | SUP | Automation **Generate Product Batches** |
 
-```text
-SUP
- │
- ▼
-Product Date
- │
- ▼
-Generate Product Batches
- │
- ▼
-Storage
- │
- ▼
-Blending
- │
- ▼
-After Past
- │
- ▼
-Standardized
- │
- ▼
-Create Product_ID
- │
- ▼
-Finish-good
-```
+## Manual vs automatic
 
----
+| Who | Enters |
+|---|---|
+| **SUP** | `Product_ID` / Product_Date and run data · BOM and buffer inputs |
+| **Operator** | Measured values at every stage (Storage, Blending, Thermised, Recombine, After Past, Standardized) |
 
-## 🗃️ Main Database
+| Automation | Does |
+|---|---|
+| **Generate Product Batches** | Creates the Soy Milk Batch rows (including split batches) so the SUP doesn't add them one by one |
+| **SaveBatch** | Creates the Finish-good rows from the produced Batches — [details](../prp3/finish-good.md) |
+| BOM / `buffer_vol` | Calculated from SUP inputs on the Standardized page — [formulas](../prp3/yield.md#bom-and-buffer_vol-formulas) |
 
-| Table           | Purpose                                                                  |
-| --------------- | ------------------------------------------------------------------------ |
-| **Prp 3 table** | เก็บข้อมูล `Product_ID`, `Flavor` และ `Batch` สำหรับกระบวนการ Fresh Milk |
-| **prp1_table**  | เก็บข้อมูล `Product_ID`, `Flavor`, `Batch` และข้อมูลการผลิตของ Soy Milk  |
-| **Yield**       | เก็บข้อมูลการผลิตของ Fresh Milk ในแต่ละขั้นตอน                           |
-| **Finish-good** | เก็บข้อมูลผลิตภัณฑ์ที่ผ่านกระบวนการฆ่าเชื้อแล้ว                          |
+## Tables
 
----
+| Table | Holds |
+|---|---|
+| `Prp 3 table` | Fresh Milk `Product_ID`, Flavor, Batch — [details](../prp3/prp3-table.md) |
+| `prp1_table` | Soy Milk Product_Date, Batch, Group, `Product_ID` and stage data |
+| `Yield` + stage tables | Fresh Milk data at each stage |
+| `Finish-good` | After-sterilization check, shared by all plants — [details](../prp3/finish-good.md) |
+| `PRP_Spec` | Spec limits by Source + Flavor + Size — [details](../prp3/yield.md#spec-check-checkspecprp) |
 
-## ⚙️ Automation
+## Pages in this folder
 
-ระบบมี Automation ที่ใช้สนับสนุนกระบวนการผลิต เช่น
-
-* **Generate Product Batches** — สร้างข้อมูล Batch สำหรับ Soy Milk
-* **SaveBatch** — สร้างข้อมูล Batch ใน `Finish-good` ตามจำนวน Batch ที่ผลิต
-
----
-## 👤 User Input & ⚙️ System Automation
-
-ระบบแบ่งการทำงานออกเป็น 2 ส่วนหลัก ได้แก่ **ข้อมูลที่ผู้ใช้งานกรอกเอง** และ **ข้อมูลที่ระบบสร้างหรือคำนวณให้อัตโนมัติ**
-
-### 👤 ข้อมูลที่ผู้ใช้งานกรอกเอง
-
-| User         | ข้อมูลที่กรอก                                                                                         |
-| ------------ | ----------------------------------------------------------------------------------------------------- |
-| **SUP**      | `Product_ID` และข้อมูลที่เกี่ยวข้องกับการสร้างผลิตภัณฑ์                                               |
-| **SUP**      | ข้อมูล `BOM` และ `Buffer_Vol` ซึ่งระบบจะนำไปคำนวณค่าที่เกี่ยวข้อง                                     |
-| **Operator** | ข้อมูลการผลิตในแต่ละขั้นตอน เช่น Storage, Blending, Thermised, Recombine, After Past และ Standardized |
-| **Operator** | ข้อมูลการผลิตและค่าต่าง ๆ ที่เกิดขึ้นจริงในกระบวนการผลิต                                              |
-
-### ⚙️ ข้อมูลที่ระบบสร้างให้อัตโนมัติ
-
-| Process              | System Automation                                                                             |
-| -------------------- | --------------------------------------------------------------------------------------------- |
-| **Soy Milk**         | ระบบวนลูปสร้างเลข `Batch` และจัดเก็บข้อมูลเป็น Row เพื่อให้ SUP ไม่ต้องเพิ่ม Batch ทีละรายการ |
-| **Finish-good**      | เมื่อ SUP สร้าง `Product_ID` ระบบจะวนลูปสร้างข้อมูล Batch ใน `Finish-good` ให้อัตโนมัติ       |
-| **BOM / Buffer_Vol** | ระบบนำข้อมูลที่ SUP กรอกมาใช้ในการคำนวณค่าที่เกี่ยวข้องโดยอัตโนมัติ                           |
-
-> **สรุป:** SUP เป็นผู้กำหนดและกรอกข้อมูลหลักที่ใช้ในการสร้างผลิตภัณฑ์ ส่วน Operator เป็นผู้บันทึกข้อมูลที่เกิดขึ้นจริงในกระบวนการผลิต ขณะที่ระบบจะช่วยสร้าง Batch, สร้างข้อมูลใน `Finish-good` และคำนวณค่าบางส่วนให้อัตโนมัติ เพื่อลดการกรอกข้อมูลซ้ำและลดความผิดพลาดจากการทำงานด้วยตนเอง
+| Page | Covers |
+|---|---|
+| [soy-milk.md](soy-milk.md) | Product_Date, Batch generation and splitting, stage pages, late `Product_ID` |
+| [fresh-milk.md](fresh-milk.md) | Fresh & Fermented Milk tables and stage pages, and how they differ from PRP3 |
+| [problems.md](problems.md) | Known issues and improvements |
