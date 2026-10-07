@@ -6,7 +6,7 @@ production stage on a tablet; every record is tied to one `Product_ID`, so a pro
 traced from the first mixing step to the finished carton.
 
 > New here? Read this page first, then the overview of the building you care about:
-> **[PRP1](prp1/README.md)** · **[PRP3](prp3/README.md)**
+> **[PRP1](prp1/readme.md)** · **[PRP3](prp3/readme.md)**
 
 ---
 
@@ -26,8 +26,8 @@ central digital database — the first step towards the wider Smart Factory plat
 
 | Building | Products | Docs |
 |---|---|---|
-| **PRP1** (Production Building 1) | Fresh Milk, Fermented Milk (Recombine area) · Soy Milk (Blending area) | [prp1/](prp1/README.md) |
-| **PRP3** (Production Building 3) | Fresh Milk, Fermented Milk, Soy Milk, Tea, Coffee, Juice | [prp3/](prp3/README.md) |
+| **PRP1** (Production Building 1) | Fresh Milk, Fermented Milk (Recombine area) · Soy Milk (Blending area) | [prp1/](prp1/readme.md) |
+| **PRP3** (Production Building 3) | Fresh Milk, Fermented Milk, Soy Milk, Tea, Coffee, Juice | [prp3/](prp3/readme.md) |
 
 ## Who uses it
 
