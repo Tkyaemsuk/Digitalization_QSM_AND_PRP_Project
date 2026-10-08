@@ -1,0 +1,477 @@
+/* SQL Name: Calculate_MPN_With_Tube5_Power_Fixed.sql */
+
+SET NOCOUNT ON;
+
+
+/* ============================================================
+   1. รับค่าจาก Budibase
+   ============================================================ */
+
+DECLARE @Choice NVARCHAR(50) =
+    NULLIF(LTRIM(RTRIM('{{ Choice }}')), '');
+
+DECLARE @TestType NVARCHAR(50) =
+    NULLIF(LTRIM(RTRIM('{{ TestType }}')), '');
+
+DECLARE @SampID NVARCHAR(255) =
+    NULLIF(LTRIM(RTRIM('{{ SampID }}')), '');
+
+DECLARE @Power INT =
+    ISNULL(
+        TRY_CONVERT(
+            INT,
+            NULLIF(LTRIM(RTRIM('{{ Power }}')), '')
+        ),
+        0
+    );
+
+
+/* ============================================================
+   2. ตัวแปรผลลัพธ์
+   ============================================================ */
+
+DECLARE @Result VARCHAR(100) = NULL;
+DECLARE @BaseResult VARCHAR(100) = NULL;
+
+
+/* ============================================================
+   3. MPN 100 ml แบบปกติ
+   ============================================================ */
+
+IF @Choice = '100ml'
+BEGIN
+
+    SELECT TOP 1
+        @Result = CONVERT(VARCHAR(100), MPN_100_ml)
+
+    FROM MPN_INDEX_100ml
+
+    WHERE
+        [10_ml] =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ 10_ml }}', '')
+            )
+
+        AND [1_ml] =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ 1_ml }}', '')
+            )
+
+        AND [0_1_ml] =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ 0_1_ml }}', '')
+            );
+
+END;
+
+
+/* ============================================================
+   4. Tube 10
+   ============================================================ */
+
+IF @Choice = '100ml_tube_10'
+BEGIN
+
+    SELECT TOP 1
+        @Result = CONVERT(VARCHAR(100), MPN_100_ml)
+
+    FROM MPN_INDEX_100ml_10
+
+    WHERE
+        tubes =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ Tubes }}', '')
+            );
+
+END;
+
+
+/* ============================================================
+   5. Tube 5
+      รองรับ Power 0 / 1
+
+      ตัวอย่าง:
+
+      <2.2 + Power 0
+      -> <2.2
+
+      <2.2 + Power 1
+      -> <22
+   ============================================================ */
+
+IF @Choice = '100ml_tube_5'
+BEGIN
+
+    /* --------------------------------------------------------
+       5.1 อ่านค่า MPN เดิม
+       -------------------------------------------------------- */
+
+    SELECT TOP 1
+        @BaseResult =
+            LTRIM(
+                RTRIM(
+                    CONVERT(
+                        VARCHAR(100),
+                        MPN_100_ml
+                    )
+                )
+            )
+
+    FROM MPN_INDEX_100ml_5
+
+    WHERE
+        tubes =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ Tubes }}', '')
+            );
+
+
+    /* --------------------------------------------------------
+       5.2 Power = 0
+       ใช้ค่าเดิม
+       -------------------------------------------------------- */
+
+    IF @Power = 0
+    BEGIN
+
+        SET @Result = @BaseResult;
+
+    END;
+
+
+    /* --------------------------------------------------------
+       5.3 Power = 1
+       คูณด้วย 10
+       -------------------------------------------------------- */
+
+    IF @Power = 1
+    BEGIN
+
+        DECLARE @Prefix VARCHAR(5) = '';
+        DECLARE @ValueText VARCHAR(100);
+        DECLARE @NumericValue DECIMAL(18,6);
+        DECLARE @PoweredValue DECIMAL(18,6);
+        DECLARE @OutputNumber VARCHAR(100);
+
+
+        /* ====================================================
+           ตรวจเครื่องหมาย <
+           ==================================================== */
+
+        IF LEFT(LTRIM(@BaseResult), 1) = '<'
+        BEGIN
+
+            SET @Prefix = '<';
+
+            SET @ValueText =
+                LTRIM(
+                    RTRIM(
+                        SUBSTRING(
+                            LTRIM(@BaseResult),
+                            2,
+                            LEN(LTRIM(@BaseResult))
+                        )
+                    )
+                );
+
+        END;
+
+
+        /* ====================================================
+           ตรวจเครื่องหมาย >
+           ==================================================== */
+
+        ELSE IF LEFT(LTRIM(@BaseResult), 1) = '>'
+        BEGIN
+
+            SET @Prefix = '>';
+
+            SET @ValueText =
+                LTRIM(
+                    RTRIM(
+                        SUBSTRING(
+                            LTRIM(@BaseResult),
+                            2,
+                            LEN(LTRIM(@BaseResult))
+                        )
+                    )
+                );
+
+        END;
+
+
+        /* ====================================================
+           ไม่มีเครื่องหมาย
+           ==================================================== */
+
+        ELSE
+        BEGIN
+
+            SET @ValueText =
+                LTRIM(
+                    RTRIM(@BaseResult)
+                );
+
+        END;
+
+
+        /* ====================================================
+           แปลงเป็นตัวเลข
+           ==================================================== */
+
+        SET @NumericValue =
+            TRY_CONVERT(
+                DECIMAL(18,6),
+                @ValueText
+            );
+
+
+        /* ====================================================
+           ถ้าแปลงเป็นตัวเลขได้
+           ==================================================== */
+
+        IF @NumericValue IS NOT NULL
+        BEGIN
+
+            /* Power 1 = × 10 */
+            SET @PoweredValue =
+                @NumericValue * 10;
+
+
+            /* ------------------------------------------------
+               ถ้าเป็นจำนวนเต็ม
+
+               22.000000
+               -> 22
+               ------------------------------------------------ */
+
+            IF @PoweredValue = FLOOR(@PoweredValue)
+            BEGIN
+
+                SET @OutputNumber =
+                    CONVERT(
+                        VARCHAR(100),
+                        CONVERT(
+                            BIGINT,
+                            @PoweredValue
+                        )
+                    );
+
+            END;
+
+            ELSE
+            BEGIN
+
+                /* --------------------------------------------
+                   แปลง Decimal เป็นข้อความก่อน
+
+                   ตัวอย่าง:
+                   22.500000
+                   -------------------------------------------- */
+
+                SET @OutputNumber =
+                    CONVERT(
+                        VARCHAR(100),
+                        @PoweredValue
+                    );
+
+
+                /* --------------------------------------------
+                   ตัด 0 ท้ายออก
+                   ใช้ WHILE เพื่อรองรับ SQL Server รุ่นเก่า
+                   -------------------------------------------- */
+
+                WHILE
+                    RIGHT(@OutputNumber, 1) = '0'
+                BEGIN
+
+                    SET @OutputNumber =
+                        LEFT(
+                            @OutputNumber,
+                            LEN(@OutputNumber) - 1
+                        );
+
+                END;
+
+
+                /* ตัด . ถ้าเหลืออยู่ท้าย */
+                IF RIGHT(@OutputNumber, 1) = '.'
+                BEGIN
+
+                    SET @OutputNumber =
+                        LEFT(
+                            @OutputNumber,
+                            LEN(@OutputNumber) - 1
+                        );
+
+                END;
+
+            END;
+
+
+            /* ------------------------------------------------
+               ประกอบเครื่องหมายกลับ
+               ------------------------------------------------ */
+
+            SET @Result =
+                  @Prefix
+                + @OutputNumber;
+
+        END;
+
+        ELSE
+        BEGIN
+
+            /* ถ้าแปลงเลขไม่ได้ ใช้ค่าเดิม */
+            SET @Result =
+                @BaseResult;
+
+        END;
+
+    END;
+
+
+    /* --------------------------------------------------------
+       Power อื่นที่ไม่ใช่ 0 หรือ 1
+       ให้ใช้ค่าเดิม
+       -------------------------------------------------------- */
+
+    IF @Power NOT IN (0, 1)
+    BEGIN
+
+        SET @Result =
+            @BaseResult;
+
+    END;
+
+END;
+
+
+/* ============================================================
+   6. Tube 10 กำลัง 0
+   ============================================================ */
+
+IF @Choice = '100ml_tube_10_0'
+BEGIN
+
+    SELECT TOP 1
+        @Result =
+            CONVERT(
+                VARCHAR(100),
+                MPN_100_ml
+            )
+
+    FROM MPN_INDEX_100ml_10_0
+
+    WHERE
+        [1_ml] =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ 1_ml_b13 }}', '')
+            )
+
+        AND [0_1_ml] =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ 0_1_ml_b13 }}', '')
+            )
+
+        AND [0_0_1_ml] =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ 0_0_1_ml_b13 }}', '')
+            );
+
+END;
+
+
+/* ============================================================
+   7. Tube 10 กำลัง 1
+   ============================================================ */
+
+IF @Choice = '100ml_tube_10_1'
+BEGIN
+
+    SELECT TOP 1
+        @Result =
+            CONVERT(
+                VARCHAR(100),
+                MPN_100_ml
+            )
+
+    FROM MPN_INDEX_100ml_10_1
+
+    WHERE
+        [0_1_ml] =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ 0_1_ml_b14 }}', '')
+            )
+
+        AND [0_0_1_ml] =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ 0_0_1_ml_b14 }}', '')
+            )
+
+        AND [0_0_0_1_ml] =
+            TRY_CONVERT(
+                INT,
+                NULLIF('{{ 0_0_0_1_ml_b14 }}', '')
+            );
+
+END;
+
+
+/* ============================================================
+   8. Update Coliform
+   ============================================================ */
+
+IF UPPER(@TestType) = 'COLIFORM'
+BEGIN
+
+    UPDATE Sampling_Result
+
+    SET
+        Coliform_MPN_Result = @Result
+
+    WHERE
+        CONVERT(NVARCHAR(255), SampID) = @SampID;
+
+END;
+
+
+/* ============================================================
+   9. Update E.coli
+   ============================================================ */
+
+IF UPPER(@TestType) IN ('ECOLI', 'E.COLI', 'E_COLI')
+BEGIN
+
+    UPDATE Sampling_Result
+
+    SET
+        Ecoli_MPN_Result = @Result
+
+    WHERE
+        CONVERT(NVARCHAR(255), SampID) = @SampID;
+
+END;
+
+
+/* ============================================================
+   10. Return
+   ============================================================ */
+
+SELECT
+    @Result AS Result,
+    @BaseResult AS BaseResult,
+    @Power AS Power,
+    @Choice AS Choice,
+    @TestType AS TestType,
+    @SampID AS SampID;
