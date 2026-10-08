@@ -1,0 +1,426 @@
+-- =========================================================
+
+[Sampling RawMilk]
+        │
+        │ SamplingID = {{ SamplingC }}
+        ▼
+เลือกแถวที่ต้องการ
+        │
+        ▼
+อ่านค่า
+Fat
+SNF
+FP
+SPC_Tank_1
+SPC_Tank_2
+SPC_Tank_3
+SCC
+Std_Price
+W_kg
+        │
+        ▼
+┌──────────────────────┐
+│ AVG SPC Tank 1–3     │
+└───────┬──────────────┘
+           ▼
+       AvgSPC
+       เช่น 246667
+           │
+           ├───────────┐
+           ▼               ▼
+    SPC_Display         SPC_Calc
+       2.47               247000
+           │               │
+           │               ├── Grade_SPC
+           │               └── rate_SPC
+           │
+           └── บันทึก SPC
+           
+จากนั้นหาคา Grade และ Rate
+        │
+        ├── Fat → Grade_Fat | rate_Fat
+        │
+        ├── SNF → Grade_SNF | rate_SNF
+        │
+        ├── FP  → Grade_FP  | rate_FP
+        │
+        ├── SPC → Grade_SPC | rate_SPC
+        │
+        └── SCC → Grade_SCC | rate_SCC
+                    │
+                    ▼
+   คำนวณ Net_Price (ราคาที่ใช้หา Price) โดยได้จาก Std.Price + rate_Fat + rate_SNF + rate_FP + rate_SPC + rate_SCC = 
+                    │
+                    ▼
+   Net_Price (ราคาที่ใช้หา Price) × W_kg(น้ำหนัก)
+                    │
+                    ▼
+                  Price
+                    │
+                    ▼
+                  บันทึกค่า
+
+-- =========================================================
+
+UPDATE RM
+SET 
+
+    -- =========================================================
+    -- วัดเกรด Fat ตั้งแต่ 1-6 แล้วในค่าที่ได้บันทึกใน Grade by DMG ของ Fat
+
+    Grade_Fat = CASE 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) >= 4.00 THEN 1 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.80 AND 3.99 THEN 2 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.60 AND 3.79 THEN 3 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.40 AND 3.59 THEN 4 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.20 AND 3.39 THEN 5 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) < 3.20 THEN 6 
+    END, 
+       
+        -- =========================================================
+
+    -- =========================================================
+    -- วัดเกรด SNF ตั้งแต่ 1-5 แล้วในค่าที่ได้บันทึกใน Grade by DMG ของ SNF
+
+    Grade_SNF = CASE 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) > 8.70 THEN 1 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.50 AND 8.69 THEN 2 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.35 AND 8.49 THEN 3 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.25 AND 8.34 THEN 4 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) < 8.25 THEN 5 
+    END, 
+
+        -- =========================================================
+
+    -- =========================================================
+    -- วัดเกรด FP ตั้งแต่ 1-4 แล้วในค่าที่ได้บันทึกใน Grade by DMG ของ FP
+   
+    Grade_FP = CASE 
+        WHEN TRY_CAST(RM.FP AS DECIMAL(10,4)) <= -0.520 THEN 1 
+        WHEN TRY_CAST(RM.FP AS DECIMAL(10,4)) <= -0.515 THEN 2 
+        WHEN TRY_CAST(RM.FP AS DECIMAL(10,4)) <= -0.510 THEN 3 
+        WHEN TRY_CAST(RM.FP AS DECIMAL(10,4)) > -0.510 THEN 4 
+    END, 
+
+
+    -- =========================================================
+    -- เกรด SPC
+    --
+    -- ใช้ SPC_Calc ซึ่งเป็นค่าหลังจาก
+    -- 1. AVG SPC Tank
+    -- 2. แปลงเป็นหลักแสน
+    -- 3.คูณกลับ 100000
+    -- **หมายเหตุโดยปกติค่าที่ถูกบันทึกจะเป็นหลักทศนิยมแต่การวัดจริงใช้จำนวณเต็มจึงต้องใช้ 10000 เพื่อแปลงค่า**
+    -- ตัวอย่าง
+    -- 246667 -> 2.47 -> 247000
+    -- จากนั้นจะ วัดเกรด SPC ตั้งแต่ 1-7 แล้วในค่าที่ได้บันทึกใน Grade by DMG ของ SPC
+    -- =========================================================
+
+    Grade_SPC = CASE 
+        WHEN V.SPC_Calc <= 200000 THEN 1 
+        WHEN V.SPC_Calc BETWEEN 200001 AND 300000 THEN 2 
+        WHEN V.SPC_Calc BETWEEN 300001 AND 400000 THEN 3 
+        WHEN V.SPC_Calc BETWEEN 400001 AND 500000 THEN 4 
+        WHEN V.SPC_Calc BETWEEN 500001 AND 700000 THEN 5 
+        WHEN V.SPC_Calc BETWEEN 700001 AND 1000000 THEN 6 
+        WHEN V.SPC_Calc > 1000000 THEN 7 
+    END, 
+
+
+    -- =========================================================
+    -- เกรด SCC
+    --
+    -- SCC อ่านเป็นค่า เช่น 2.83
+    -- ตอนคำนวณให้แปลงเป็น 283000
+    -- **หมายเหตุโดยปกติค่าที่ถูกบันทึกจะเป็นหลักทศนิยมแต่การวัดจริงใช้จำนวณเต็มจึงต้องใช้คูณ 10000 เพื่อแปลงค่า**
+    -- วัดเกรด SCC ตั้งแต่ 1-7 แล้วในค่าที่ได้บันทึกใน Grade by DMG ของ SCC
+    -- =========================================================
+
+    Grade_SCC = CASE 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 <= 200000 THEN 1 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 200001 AND 300000 THEN 2 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 300001 AND 400000 THEN 3 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 400001 AND 500000 THEN 4 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 500001 AND 700000 THEN 5 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 700001 AND 1000000 THEN 6 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 > 1000000 THEN 7 
+    END, 
+
+    -- =========================================================
+    -- rate_Fat
+    -- วัดเรท ตั้งแต่ 0.40-(-0.40) แล้วนำค่าที่ได้บันทึกใน Price cutting based on DMG reference ของ Fat
+    -- =========================================================
+
+    rate_Fat = CASE 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) >= 4.00 THEN 0.40 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.80 AND 3.99 THEN 0.30 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.60 AND 3.79 THEN 0.20 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.40 AND 3.59 THEN 0.00 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.20 AND 3.39 THEN -0.20 
+        WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) < 3.20 THEN -0.40 
+    END, 
+
+
+    -- =========================================================
+    -- rate_SNF
+        -- วัดเรท ตั้งแต่ 0.60-(-0.40) แล้วนำค่าที่ได้บันทึกใน Price cutting based on DMG reference ของ SNF
+    -- =========================================================
+
+    rate_SNF = CASE 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) > 8.70 THEN 0.60 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.50 AND 8.69 THEN 0.30 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.35 AND 8.49 THEN 0.00 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.25 AND 8.34 THEN -0.20 
+        WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) < 8.25 THEN -0.40 
+    END, 
+    
+    -- =========================================================
+
+    -- =========================================================
+    -- rate_FP
+    -- วัดเรท แค่ -1.00 ถ้ามากกว่า -0.510 นอกนั้นเป็น 0 แล้วนำค่าที่ได้บันทึกใน Price cutting based on DMG reference ของ FP
+    
+    rate_FP = CASE 
+        WHEN TRY_CAST(RM.FP AS DECIMAL(10,4)) > -0.510 THEN -1.00 
+        ELSE 0.00 
+    END, 
+
+    -- =========================================================
+
+    -- =========================================================
+    -- rate_SPC
+    --
+    -- สำคัญ:
+    -- ใช้ จากค่าเดิมคือ 2.47 แต่แปลงเป็นจำนวณเต็มเพื่อให้คำนวณได้เป็น 247000 โดยได้ค่าจาก SPC_Cal
+    -- วัดเรท ตั้งแต่ 0.50-(-0.50) แล้วนำค่าที่ได้บันทึกใน Price cutting based on DMG reference ของ SPC
+    -- =========================================================
+
+    rate_SPC = CASE 
+        WHEN V.SPC_Calc <= 200000 THEN 0.50 
+        WHEN V.SPC_Calc BETWEEN 200001 AND 300000 THEN 0.30 
+        WHEN V.SPC_Calc BETWEEN 300001 AND 400000 THEN 0.20 
+        WHEN V.SPC_Calc BETWEEN 400001 AND 500000 THEN 0.00 
+        WHEN V.SPC_Calc BETWEEN 500001 AND 700000 THEN -0.20 
+        WHEN V.SPC_Calc BETWEEN 700001 AND 1000000 THEN -0.30 
+        WHEN V.SPC_Calc > 1000000 THEN -0.50 
+    END, 
+
+
+    -- =========================================================
+    -- rate_SCC
+        -- วัดเรท ตั้งแต่ 0.50-(-0.50) แล้วนำค่าที่ได้บันทึกใน Price cutting based on DMG reference ของ SCC
+    -- =========================================================
+    rate_SCC = CASE 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 <= 200000 THEN 0.50 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 200001 AND 300000 THEN 0.30 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 300001 AND 400000 THEN 0.20 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 400001 AND 500000 THEN 0.00 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 500001 AND 700000 THEN -0.20 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 700001 AND 1000000 THEN -0.30 
+        WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 > 1000000 THEN -0.50 
+    END, 
+
+
+    -- =========================================================
+    -- SPC
+    --
+    -- ค่าที่บันทึก/แสดงใน QSM
+    --
+    -- 246667
+    --    ↓ /100000
+    -- 2.46667
+    --    ↓ ROUND 2
+    -- 2.47
+    -- =========================================================
+    SPC = V.SPC_Display,
+
+
+    -- =========================================================
+    -- **หาค่า Net_Price**
+    -- ช่วงคำนวณหาค่า Net Price ซึ่งแยกจากการคำนวณหาค่า Price เนื่องจากใช้การบันทึกค่าแยกกัน
+    -- โดย การคำนวณจะอ่าน Std Price ที่มีแล้วนำมาบวกกับค่าที่หาได้ แล้วจะได้ค่า Net_Price มา
+    -- =========================================================
+    Net_Price = ROUND( 
+        TRY_CAST(RM.Std_Price AS DECIMAL(18,2)) 
+
+        + CASE 
+            WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) >= 4.00 THEN 0.40 
+            WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.80 AND 3.99 THEN 0.30 
+            WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.60 AND 3.79 THEN 0.20 
+            WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.40 AND 3.59 THEN 0.00 
+            WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.20 AND 3.39 THEN -0.20 
+            WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) < 3.20 THEN -0.40 
+        END 
+
+        + CASE 
+            WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) > 8.70 THEN 0.60 
+            WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.50 AND 8.69 THEN 0.30 
+            WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.35 AND 8.49 THEN 0.00 
+            WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.25 AND 8.34 THEN -0.20 
+            WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) < 8.25 THEN -0.40 
+        END 
+
+        + CASE 
+            WHEN TRY_CAST(RM.FP AS DECIMAL(10,4)) > -0.510 THEN -1.00 
+            ELSE 0.00 
+        END 
+
+        + CASE 
+            WHEN V.SPC_Calc <= 200000 THEN 0.50 
+            WHEN V.SPC_Calc BETWEEN 200001 AND 300000 THEN 0.30 
+            WHEN V.SPC_Calc BETWEEN 300001 AND 400000 THEN 0.20 
+            WHEN V.SPC_Calc BETWEEN 400001 AND 500000 THEN 0.00 
+            WHEN V.SPC_Calc BETWEEN 500001 AND 700000 THEN -0.20 
+            WHEN V.SPC_Calc BETWEEN 700001 AND 1000000 THEN -0.30 
+            WHEN V.SPC_Calc > 1000000 THEN -0.50 
+        END 
+
+        + CASE 
+            WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 <= 200000 THEN 0.50 
+            WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 200001 AND 300000 THEN 0.30 
+            WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 300001 AND 400000 THEN 0.20 
+            WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 400001 AND 500000 THEN 0.00 
+            WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 500001 AND 700000 THEN -0.20 
+            WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 700001 AND 1000000 THEN -0.30 
+            WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 > 1000000 THEN -0.50 
+        END,
+        2
+    ), 
+
+
+    -- =========================================================
+    -- **หา Price **
+    -- โดยนำ Std.Price + ค่า Rate ทั้งหมดโดยมี ค่า Fat + ค่า SNF + ค่า FP + ค่า SPC + ค่า SCC = Net Price 
+    -- จากนั้นนำไปคูณ กับ W_kg ( น้ำหนักที่มี ) จะได้ค่า Price มา
+    -- =========================================================
+
+    Price = ROUND( 
+        (
+            TRY_CAST(RM.Std_Price AS DECIMAL(18,2)) 
+          
+     -- =========================================================
+     -- ช่วงของการหาค่า Fat ในการคำนวณเรทราคาในการเอาไปรวมเพื่อหา Net Price
+      
+
+            + CASE 
+                WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) >= 4.00 THEN 0.40 
+                WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.80 AND 3.99 THEN 0.30 
+                WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.60 AND 3.79 THEN 0.20 
+                WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.40 AND 3.59 THEN 0.00 
+                WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) BETWEEN 3.20 AND 3.39 THEN -0.20 
+                WHEN TRY_CAST(RM.Fat AS DECIMAL(10,4)) < 3.20 THEN -0.40 
+            END
+     -- =========================================================
+      
+     -- =========================================================
+     -- ช่วงของการหาค่า SNF ในการคำนวณเรทราคาในการเอาไปรวมเพื่อหา Net Price 
+
+            + CASE 
+                WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) > 8.70 THEN 0.60 
+                WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.50 AND 8.69 THEN 0.30 
+                WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.35 AND 8.49 THEN 0.00 
+                WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) BETWEEN 8.25 AND 8.34 THEN -0.20 
+                WHEN TRY_CAST(RM.SNF AS DECIMAL(10,4)) < 8.25 THEN -0.40 
+            END
+     -- =========================================================
+     
+     -- =========================================================
+     -- ช่วงของการหาค่า FP ในการคำนวณเรทราคาในการเอาไปรวมเพื่อหา Net Price 
+
+            + CASE 
+                WHEN TRY_CAST(RM.FP AS DECIMAL(10,4)) > -0.510 THEN -1.00 
+                ELSE 0.00 
+            END
+ 
+     -- =========================================================
+     
+     -- =========================================================
+     -- ช่วงของการหาค่า SPC ในการคำนวณเรทราคาในการเอาไปรวมเพื่อหา Net Price
+      
+
+            + CASE 
+                WHEN V.SPC_Calc <= 200000 THEN 0.50 
+                WHEN V.SPC_Calc BETWEEN 200001 AND 300000 THEN 0.30 
+                WHEN V.SPC_Calc BETWEEN 300001 AND 400000 THEN 0.20 
+                WHEN V.SPC_Calc BETWEEN 400001 AND 500000 THEN 0.00 
+                WHEN V.SPC_Calc BETWEEN 500001 AND 700000 THEN -0.20 
+                WHEN V.SPC_Calc BETWEEN 700001 AND 1000000 THEN -0.30 
+                WHEN V.SPC_Calc > 1000000 THEN -0.50 
+            END
+     -- =========================================================
+
+     -- =========================================================
+     -- ช่วงของการหาค่า SCC ในการคำนวณเรทราคาในการเอาไปรวมเพื่อหา Net Price
+      
+
+            + CASE 
+                WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 <= 200000 THEN 0.50 
+                WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 200001 AND 300000 THEN 0.30 
+                WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 300001 AND 400000 THEN 0.20 
+                WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 400001 AND 500000 THEN 0.00 
+                WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 500001 AND 700000 THEN -0.20 
+                WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 BETWEEN 700001 AND 1000000 THEN -0.30 
+                WHEN TRY_CAST(RM.SCC AS DECIMAL(18,2)) * 100000 > 1000000 THEN -0.50 
+            END
+        ) * TRY_CAST(RM.W_kg AS DECIMAL(18,0)), 
+        2
+    )
+
+     -- =========================================================
+
+FROM [Sampling RawMilk] AS RM
+
+
+-- =============================================================
+-- คำนวณค่า SPC
+-- หาค่าผลรวมของ SPC_Tank_1,SPC_Tank_2,SPC_Tank_3
+-- โดยนำค่า value / จำนวนทั้งหมด จะได้ผลลัพธ์ออกมา  
+
+CROSS APPLY
+(
+    SELECT
+        CAST(ROUND(AVG(V.SPCValue), 0) AS INT) AS AvgSPC
+    FROM
+    (
+        SELECT TRY_CAST(RM.SPC_Tank_1 AS DECIMAL(18,2)) AS SPCValue
+        UNION ALL
+        SELECT TRY_CAST(RM.SPC_Tank_2 AS DECIMAL(18,2))
+        UNION ALL
+        SELECT TRY_CAST(RM.SPC_Tank_3 AS DECIMAL(18,2))
+    ) AS V
+) AS A
+
+-- =============================================================
+
+-- =============================================================
+-- สร้างค่า SPC สำหรับแสดงผลและค่า SPC สำหรับคำนวณ
+--
+-- AvgSPC    = ค่าเฉลี่ยจริง เช่น 246667
+--
+-- SPC_Display:
+-- 246667 / 100000
+-- = 2.46667
+-- ROUND 2
+-- = 2.47
+--
+-- SPC_Calc:
+-- 2.47 * 100000
+-- = 247000
+
+CROSS APPLY
+(
+    SELECT
+        CAST(
+            ROUND(A.AvgSPC / 100000.0, 2)
+            AS DECIMAL(18,2)
+        ) AS SPC_Display,
+
+        CAST(
+            ROUND(A.AvgSPC / 100000.0, 2) * 100000
+            AS DECIMAL(18,0)
+        ) AS SPC_Calc
+) AS V
+
+-- =============================================================
+
+WHERE RM.SamplingID = {{ SamplingC }};
