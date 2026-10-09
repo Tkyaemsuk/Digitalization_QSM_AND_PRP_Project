@@ -45,7 +45,7 @@
 | 🧫 QSM Microbiological | QSM Microbiological Analysis System | [เปิดโฟลเดอร์ QSM Microbiological Analysis System](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Microbiological%20Analysis%20System) |
 | 🥛 QSM Microbiological | QSM Raw Milk | [เปิดโฟลเดอร์ QSM Raw Milk Analysis](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20RawMilk) |
 | 🔬 QSM Microbiological | QSM Microbiological | [เปิดโฟลเดอร์ QSM Microbiological](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Microbiological) |
-| 🥛 PRP1, PRP2, PRP3 (อาคารผลิต 1–3) | PRP Dairy Mixing and Quality Control | [เปิดโฟลเดอร์ PRP Dairy Mixing and Quality Control](./PRP%20Dairy%20Mixing%20and%20Quality%20Control) |
+| 🥛 PRP1, PRP2, PRP3 (อาคารผลิต 1–3) | PRP Dairy Mixing and Quality Control | [เปิดโฟลเดอร์ PRP Dairy Mixing and Quality Control](https://github.com/Tkyaemsuk/Digitalization_QSM_AND_PRP_Project/tree/main/PRP%20Dairy%20Mixing%20and%20Quality%20Control) |
 
 > ℹ️ หากชื่อโฟลเดอร์ใน GitHub แตกต่างจากที่ระบุไว้ กรุณาปรับ URL ในตารางให้ตรงกับชื่อโฟลเดอร์จริง
 
