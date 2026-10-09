@@ -45,6 +45,7 @@
 | 🧫 QSM Microbiological | QSM Microbiological Analysis System | [เปิดโฟลเดอร์ QSM Microbiological Analysis System](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Microbiological%20Analysis%20System) |
 | 🥛 QSM Microbiological | QSM Raw Milk | [เปิดโฟลเดอร์ QSM Raw Milk Analysis](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20RawMilk) |
 | 🔬 QSM Microbiological | QSM Microbiological | [เปิดโฟลเดอร์ QSM Microbiological](https://github.com/Tkyaemsuk/Digitalization_QSM_Project/tree/main/QSM%20Microbiological) |
+| 🥛 PRP1, PRP2, PRP3 (อาคารผลิต 1–3) | PRP Dairy Mixing and Quality Control | [เปิดโฟลเดอร์ PRP Dairy Mixing and Quality Control](./PRP%20Dairy%20Mixing%20and%20Quality%20Control) |
 
 > ℹ️ หากชื่อโฟลเดอร์ใน GitHub แตกต่างจากที่ระบุไว้ กรุณาปรับ URL ในตารางให้ตรงกับชื่อโฟลเดอร์จริง
 
@@ -77,6 +78,27 @@
 
 โครงการหรือโมดูลที่เกี่ยวข้องกับการจัดเก็บและประมวลผลข้อมูลด้านจุลชีววิทยา รวมถึงการเชื่อมโยงข้อมูลกับกระบวนการตรวจสอบของฝ่าย QSM
 
+### 🥛 PRP — Dairy Mixing and Quality Control
+
+ระบบสำหรับอาคารผลิตนม **PRP1, PRP2 และ PRP3** ใช้แทนเอกสารบันทึกการผลิตด้วยฐานข้อมูล ผู้ใช้งานบันทึกข้อมูลแต่ละขั้นตอนการผลิตผ่านแท็บเล็ต โดยทุกข้อมูลผูกกับ `Product_ID` เพื่อให้ติดตามย้อนกลับได้ตั้งแต่ขั้นตอนผสมแรกจนถึงผลิตภัณฑ์สำเร็จรูป
+
+| อาคาร | ผลิตภัณฑ์ / หน้าที่ |
+|---|---|
+| **PRP1** | นมสด, นมเปรี้ยว (พื้นที่ Recombine) และนมถั่วเหลือง (พื้นที่ Blending) |
+| **PRP2** | ผลิตนมเปรี้ยว และส่งนมสด/นมเปรี้ยวไปยัง PRP1 และ PRP3 แบ่งเป็น 6 Groups (F, G, H, I, J, K) |
+| **PRP3** | นมสด, นมเปรี้ยว, นมถั่วเหลือง, ชา, กาแฟ และน้ำผลไม้ |
+
+ฟังก์ชันสำคัญ:
+
+- สร้าง `Product_ID` และ Batch (Create Tag)
+- บันทึกข้อมูลแต่ละขั้นตอนการผลิตตาม Batch
+- ตรวจสอบค่าที่กรอกกับ `PRP_Spec` อัตโนมัติ
+- PRP2: บันทึกข้อมูล Buffer, Mixing และ Recombine ของ Lab และ Control
+- บันทึกผลตรวจหลังฆ่าเชื้อในตาราง `Finish-good`
+- กำหนดสิทธิ์การเข้าถึงตามหน้าที่ (SUP, Control, Lab, Operator)
+
+รายละเอียดเพิ่มเติม: [PRP Overview](./PRP%20Dairy%20Mixing%20and%20Quality%20Control/readme.md)
+
 ---
 
 ## 🔄 ภาพรวมกระบวนการทำงาน
@@ -90,6 +112,16 @@ flowchart LR
     E --> F[🔬 Microbiological Analysis]
     F --> G[📊 Report & Status]
     G --> H[✅ Approve / Finish]
+```
+
+### 🥛 กระบวนการ PRP
+
+```mermaid
+flowchart LR
+    A[👤 SUP Create Product_ID] --> B[📝 Record Stage Data]
+    B --> C[✅ Spec Check<br/>PRP_Spec]
+    C --> D[🗄️ Yield Tables]
+    D --> E[🥛 Finish-good]
 ```
 
 ---
@@ -113,6 +145,10 @@ Digitalization_QSM_AND_PRP_Project/
 ├── QSM Microbiological Analysis System/
 ├── QSM RAW MILK ANALYSIS/
 ├── QSM Microbiological/
+├── PRP Dairy Mixing and Quality Control/
+│   ├── prp1/
+│   ├── prp2/
+│   └── prp3/
 ├── assets/
 ├── README.md
 └── README.en.md
