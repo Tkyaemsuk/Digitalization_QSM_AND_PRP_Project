@@ -1,12 +1,12 @@
 # PRP — Dairy Mixing and Quality Control
 
 A Budibase application that replaces the paper production records of the dairy mixing
-buildings (**PRP1** and **PRP3**) with a database. Supervisors and operators enter each
+buildings (**PRP1**, **PRP2** and **PRP3**) with a database. Supervisors and operators enter each
 production stage on a tablet; every record is tied to one `Product_ID`, so a product can be
 traced from the first mixing step to the finished carton.
 
 > New here? Read this page first, then the overview of the building you care about:
-> **[PRP1](prp1/readme.md)** · **[PRP3](prp3/readme.md)**
+> **[PRP1](prp1/readme.md)** · **[PRP2](prp2/readme.md)** · **[PRP3](prp3/readme.md)**
 
 ---
 
@@ -27,6 +27,7 @@ central digital database — the first step towards the wider Smart Factory plat
 | Building | Products | Docs |
 |---|---|---|
 | **PRP1** (Production Building 1) | Fresh Milk, Fermented Milk (Recombine area) · Soy Milk (Blending area) | [prp1/](prp1/readme.md) |
+| **PRP2** (Production Building 2) | Fermented Milk. Also sends Fresh Milk and Fermented Milk on to PRP1 and PRP3. Six Groups: F, G, H, I, J, K | [prp2/](prp2/readme.md) |
 | **PRP3** (Production Building 3) | Fresh Milk, Fermented Milk, Soy Milk, Tea, Coffee, Juice | [prp3/](prp3/readme.md) |
 
 ## Who uses it
@@ -35,6 +36,8 @@ central digital database — the first step towards the wider Smart Factory plat
 |---|---|
 | **SUP** (supervisor) | Creates the `Product_ID` (and Batches), enters BOM / buffer data, edits and adds/removes Batches, signs off the Standardized stage |
 | **Operator** | Enters the measured values for each Batch at each stage. Their employee ID can be saved only once per record |
+| **Control** (PRP2) | Creates the `Date_ID` for Mixing, and enters Buffer, Mixing and Recombine control data |
+| **Lab** (PRP2) | Enters lab results for Buffer, Starter and Recombine. Cannot change Batch numbers |
 
 ## How it works — end to end
 
@@ -55,6 +58,29 @@ flowchart LR
    buffer volume.
 5. **Finish-good** holds the after-sterilization check for each Batch.
 
+### PRP2 differs
+
+PRP2 follows the same idea (Create Tag → stage data → spec check → Finish-good) but is organised
+around **Buffer, Mixing and Recombine** instead of the PRP1/PRP3 stage pages:
+
+```mermaid
+flowchart TD
+    A["Create Tag — /create-tag-plant2<br/>SUP creates Product_ID"]
+    A --> Y[("Yield_prp2<br/>1 row / Batch")]
+    A --> FG[("Finish-good<br/>1 row / Batch")]
+    Y -->|"Spec check"| S[("PRP_Spec<br/>Source / Flavor")]
+    Y -->|"Buffer mixing data"| M["Mixing — /mixing_table/:user<br/>Control creates Date_ID"]
+    M --> MT[("Mixing_prp2<br/>1 row / 5 Batch")]
+    M --> CM[("Control_Mixing<br/>1 row / 5 Batch")]
+    M --> RL[("Recombine_labprp2<br/>1 row / 6 Batch")]
+```
+
+- Batches in one run can alternate between products (e.g. Batch 1–2 = A, Batch 3–4 = B), so the
+  spec check reads the **Flavor of the Batch on screen**, not one Flavor for the whole run.
+- Lab and Control each have their own pages; some values entered by Lab are shown to Control as
+  grey, read-only fields.
+- Mixing is identified by a `Date_ID` (production date + shift) created by Control.
+
 ## `Product_ID` — the thread through everything
 
 `Product_ID` identifies one production run (date, week, day, loop and group) and is stored in
@@ -70,8 +96,11 @@ flowchart LR
 ```
 
 How and *when* it is created differs by building — see
-[PRP3 → Product_ID](prp3/prp3-table.md#product_id) and
-[PRP1 Soy Milk → Product_ID](prp1/soy-milk.md#4-product_id-created-at-standardized).
+[PRP3 → Product_ID](prp3/prp3-table.md#product_id),
+[PRP1 Soy Milk → Product_ID](prp1/soy-milk.md#4-product_id-created-at-standardized) and
+[PRP2 → Create Tag](prp2/create-tag-plant2.md).
+
+PRP2 uses the same format; its Groups are F, G, H, I, J and K.
 
 ## Manual vs automatic
 
@@ -81,6 +110,7 @@ How and *when* it is created differs by building — see
 | BOM and buffer inputs | BOM volume and `buffer_vol` totals |
 | Measured values at every stage | Soy Milk Batch rows (incl. split batches) — automation **Generate Product Batches** |
 | Operator employee ID | Finish-good rows — automation **SaveBatch** |
+| PRP2: `Date_ID` and Mixing Batches | PRP2 rows — automations **SaveYieldPrp2Batch** (`Yield_prp2`) and **SaveBatch -Finish-goodprp2** (`Finish-good`) |
 
 ## Tables at a glance
 
@@ -91,8 +121,17 @@ How and *when* it is created differs by building — see
 | `Yield2` | PRP3 | Stage data for Fermented Milk (added because `Yield` was full) | Columns |
 | `prp1_table` | PRP1 Soy Milk | `Product_Date`, Batch, Group, `Product_ID`, stage data | **Rows** (1 Batch = 1 row) |
 | `prp1thermised`, `blendingprp1`, `buffer1_prp1`, `buffer2_prp1` | PRP1 Fresh Milk | One table per stage page | Columns |
+| `prp_2_table` | PRP2 | `Product_ID`, Flavor, Batch, Size per run | **Columns** (11 Batches in 1 row) |
+| `Yield_prp2` | PRP2 | Production data, Buffer Lab and Buffer Control | **Rows** (1 Batch = 1 row) |
+| `Mixing_prp2` | PRP2 | Mixing Batches and Lab Mixing data | Columns (5 Batches in 1 row) |
+| `Control_Mixing` | PRP2 | Control Mixing data (Pectin, Liquid Sugar, Citric) | Columns (5 Batches in 1 row) |
+| `Recombine_labprp2` | PRP2 | Lab and Control data of Recombine milk | Columns (6 Batches in 1 row) |
 | `Finish-good` | **all plants** | After-sterilization check per Batch | **Rows** — [details](prp3/finish-good.md) |
 | `PRP_Spec` | all pages | Spec limits by Source + Flavor + Size | Lookup — [details](prp3/yield.md#spec-check-checkspecprp) |
+
+> **Why PRP2 mixes layouts:** `prp_2_table` is column-based so the overview shows one row per
+> `Product_ID` with all its Batches. `Yield_prp2` and `Finish-good` hold much more data per
+> Batch, so they are row-based — 11 Batches as columns would fill the table and be hard to edit.
 
 ## Documentation map
 
@@ -104,6 +143,13 @@ docs/prp/
 │   ├── soy-milk.md        Soy Milk: batches, Product_Date, pages, Product_ID
 │   ├── fresh-milk.md      Fresh & Fermented Milk: tables and pages
 │   └── problems.md        Known issues and improvement ideas
+├── prp2/
+│   ├── README.md          PRP2 overview
+│   ├── create-tag-plant2.md   Create Tag: Product_ID, prp_2_table, SaveYieldPrp2Batch
+│   ├── buffer_labprp2.md  Buffer Lab page: spec check by Flavor, batch buttons
+│   ├── buffer_prp2.md     Buffer Control page: Total Amount, lab-pulled fields
+│   ├── mixing_prp2.md     Mixing pages: Date_ID, Mixing_prp2, Control_Mixing
+│   └── recombined_prp2.md Recombine pages (Control and Lab)
 └── prp3/
     ├── README.md          PRP3 overview
     ├── prp3-table.md      Prp 3 table + Create Tag page
