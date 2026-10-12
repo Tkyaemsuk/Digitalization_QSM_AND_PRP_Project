@@ -1,3 +1,11 @@
+/*
+Application: QSM Microbiological
+SQL file: Calculate Result.sql
+Source: existing repository file on main
+Status: legacy repository name; see README.md for live Budibase query names.
+Original SQL below is preserved; this header is documentation only.
+*/
+
 /* =========================================================
    SQL Name : Budibase_Micro_Result_Power9_Checkbox_Fixed.sql
    Database : Microsoft SQL Server (MSSQL)
@@ -2701,3 +2709,4 @@ INNER JOIN @UpdatedResult AS u
        )
        =
        u.SampID;
+

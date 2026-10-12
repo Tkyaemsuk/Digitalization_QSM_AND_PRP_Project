@@ -1,3 +1,16 @@
+/*
+Application: QSM Microbiological
+Query name: Sync_RawMilk_DateTime_To_Micro_Result
+File: Sync_RawMilk_DateTime_To_Micro_Result.sql
+Source: Budibase latest edited app export
+Export date: 2026-10-12
+Query ID: query_datasource_plus_6a765207669f4d03ad53a31867d5f9a8_a46d1d85f0a540bc98d3e56e15cf1bad
+Budibase function: read
+Bindings: Action
+Documentation: README.md
+Original SQL below is preserved; this header is documentation only.
+*/
+
 /* =========================================================
    MSSQL / SQL Server
    จุดประสงค์:
@@ -7,8 +20,11 @@
       - อัปเดต Date / Time ไปยัง Sampling Result
    3. ถ้า Action ว่าง หรือ NULL
       - แสดงข้อมูลจาก Sampling RawMilk
-========================================================= */
+   ========================================================= */
+
 SET NOCOUNT ON;
+
+
 /* =========================================================
    1. รับค่า Action จาก Budibase
 
