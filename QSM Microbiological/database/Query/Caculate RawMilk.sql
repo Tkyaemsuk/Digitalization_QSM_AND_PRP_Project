@@ -1,3 +1,11 @@
+/*
+Application: QSM Microbiological
+SQL file: Caculate RawMilk.sql
+Source: existing repository file on main
+Status: legacy repository name; see README.md for live Budibase query names.
+Original SQL below is preserved; this header is documentation only.
+*/
+
 -- =========================================================
 
 [Sampling RawMilk]
@@ -424,3 +432,4 @@ CROSS APPLY
 -- =============================================================
 
 WHERE RM.SamplingID = {{ SamplingC }};
+
